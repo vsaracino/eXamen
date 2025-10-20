@@ -706,6 +706,168 @@ app.get('/search-sold', async (req, res) => {
   }
 });
 
+// Combined endpoint that does both active and sold searches with a single browser
+app.get('/search-combined', async (req, res) => {
+  const keyword = (req.query.q || '').toString().trim();
+  if (!keyword) {
+    return res.status(400).json({ error: 'Search query is required' });
+  }
+
+  let browser = null;
+  let activeResults = [];
+  let soldResults = [];
+  let activeTotalResults = null;
+  let soldTotalResults = null;
+
+  try {
+    // Set timeouts for Railway
+    req.setTimeout(120000);
+    res.setTimeout(120000);
+
+    console.log(`[search-combined] start q="${keyword}"`);
+
+    browser = await chromium.launch({ 
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-extensions',
+        '--disable-plugins',
+        '--disable-images',
+        '--disable-web-security'
+      ]
+    });
+
+    // First: Active search
+    console.log(`[search-combined] starting active search`);
+    const activeUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(keyword)}`;
+    const activePage = await browser.newPage();
+    
+    await activePage.goto(activeUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await activePage.waitForLoadState('networkidle', { timeout: 20000 });
+    await activePage.waitForTimeout(2000);
+
+    // Extract active results (simplified to 20 items for Railway)
+    const activeData = await activePage.evaluate(() => {
+      const items = [];
+      const listings = document.querySelectorAll('#srp-river-results li[data-viewport]');
+      
+      for (let i = 0; i < Math.min(20, listings.length); i++) {
+        const listing = listings[i];
+        const titleEl = listing.querySelector('h3 a span[role="heading"]');
+        const linkEl = listing.querySelector('h3 a');
+        const priceEl = listing.querySelector('.s-item__price');
+        const conditionEl = listing.querySelector('.s-item__subtitle .SECONDARY_INFO');
+        
+        if (titleEl && linkEl && priceEl) {
+          const title = titleEl.textContent?.trim();
+          const url = linkEl.href;
+          const price = priceEl.textContent?.trim();
+          const condition = conditionEl?.textContent?.trim() || 'Unknown';
+          
+          if (title && url && price) {
+            items.push({ title, url, price, condition });
+          }
+        }
+      }
+      
+      return items;
+    });
+
+    activeResults = activeData;
+    activeTotalResults = activeResults.length;
+    console.log(`[search-combined] active extracted items=${activeResults.length}`);
+
+    await activePage.close();
+
+    // Second: Sold search
+    console.log(`[search-combined] starting sold search`);
+    const soldUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(keyword)}&LH_Complete=1&LH_Sold=1`;
+    const soldPage = await browser.newPage();
+    
+    await soldPage.goto(soldUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await soldPage.waitForLoadState('networkidle', { timeout: 20000 });
+    await soldPage.waitForTimeout(2000);
+
+    // Extract sold results (simplified to 20 items for Railway)
+    const soldData = await soldPage.evaluate(() => {
+      const items = [];
+      const listings = document.querySelectorAll('#srp-river-results li[data-viewport]');
+      
+      for (let i = 0; i < Math.min(20, listings.length); i++) {
+        const listing = listings[i];
+        const titleEl = listing.querySelector('h3 a span[role="heading"]');
+        const linkEl = listing.querySelector('h3 a');
+        const priceEl = listing.querySelector('.s-item__price');
+        const conditionEl = listing.querySelector('.s-item__subtitle .SECONDARY_INFO');
+        
+        if (titleEl && linkEl && priceEl) {
+          const title = titleEl.textContent?.trim();
+          const url = linkEl.href;
+          const price = priceEl.textContent?.trim();
+          const condition = conditionEl?.textContent?.trim() || 'Unknown';
+          
+          if (title && url && price) {
+            items.push({ title, url, price, condition });
+          }
+        }
+      }
+      
+      return items;
+    });
+
+    soldResults = soldData;
+    soldTotalResults = soldResults.length;
+    console.log(`[search-combined] sold extracted items=${soldResults.length}`);
+
+    await soldPage.close();
+
+    // Cleanup before sending response
+    if (browser) {
+      try {
+        const contexts = browser.contexts();
+        await Promise.all(contexts.map(context => context.close().catch(() => {})));
+        await browser.close();
+        console.log('[search-combined] browser closed');
+      } catch (error) {
+        console.log('[search-combined] cleanup error:', error.message);
+      }
+    }
+
+    res.json({ 
+      activeResults, 
+      soldResults, 
+      activeTotalResults, 
+      soldTotalResults 
+    });
+
+    // Force container restart after each search to prevent corruption
+    console.log('[search-combined] forcing container restart to prevent corruption');
+    setTimeout(() => {
+      process.exit(0);
+    }, 1000);
+
+  } catch (err) {
+    console.error('[search-combined] error', err);
+    
+    // Cleanup on error too
+    if (browser) {
+      try {
+        const contexts = browser.contexts();
+        await Promise.all(contexts.map(context => context.close().catch(() => {})));
+        await browser.close();
+        console.log('[search-combined] browser closed on error');
+      } catch (error) {
+        console.log('[search-combined] cleanup error:', error.message);
+      }
+    }
+    
+    res.status(500).json({ error: 'Combined search failed' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

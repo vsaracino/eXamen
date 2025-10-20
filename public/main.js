@@ -352,23 +352,15 @@ form.addEventListener('submit', async (e) => {
   statusEl.textContent = 'Analyzing listings... This may take up to 30 seconds';
   
         try {
-          // Search active listings first
-          const activeRes = await fetch(`/search?q=${encodeURIComponent(q)}`);
-          if (!activeRes.ok) throw new Error('Active search failed');
-          const activeData = await activeRes.json();
-          
-          // Wait for active search to fully complete before starting sold search
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-          // Then search sold listings
-          const soldRes = await fetch(`/search-sold?q=${encodeURIComponent(q)}`);
-          if (!soldRes.ok) throw new Error('Sold search failed');
-          const soldData = await soldRes.json();
+          // Search both active and sold listings in a single request
+          const combinedRes = await fetch(`/search-combined?q=${encodeURIComponent(q)}`);
+          if (!combinedRes.ok) throw new Error('Combined search failed');
+          const combinedData = await combinedRes.json();
     
-    currentResults = activeData.results || [];
-    currentSoldResults = soldData.results || [];
-    window.lastTotalResults = activeData.totalResults; // Store the total results from backend
-    window.lastSoldTotalResults = soldData.totalResults; // Store the sold total results from backend
+    currentResults = combinedData.activeResults || [];
+    currentSoldResults = combinedData.soldResults || [];
+    window.lastTotalResults = combinedData.activeTotalResults; // Store the total results from backend
+    window.lastSoldTotalResults = combinedData.soldTotalResults; // Store the sold total results from backend
     summaryEl.textContent = ''; // Remove the total results display
     renderResults();
     renderSoldResults();
