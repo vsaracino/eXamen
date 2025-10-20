@@ -38,9 +38,7 @@ app.get('/search', async (req, res) => {
         '--disable-extensions',
         '--disable-plugins',
         '--disable-images',
-        '--disable-web-security',
-        '--single-process',
-        '--no-zygote'
+        '--disable-web-security'
       ]
     });
     const context = await browser.newContext({
@@ -352,28 +350,40 @@ app.get('/search', async (req, res) => {
     }
 
     console.log(`[search] extracted items=${items.length}`);
-    res.json({ totalResults, results: items });
-  } catch (err) {
-    console.error('[search] error', err);
-    if (err?.name === 'TimeoutError' || /waitForSelector|Navigation|net::ERR/i.test(String(err?.message || ''))) {
-      res.json({ totalResults: null, results: [] });
-      return;
-    }
-    res.status(500).json({ error: 'Failed to fetch results' });
-  } finally {
+    
+    // Cleanup before sending response
     if (browser) {
       try {
-        // Close all contexts first (which contain pages)
         const contexts = browser.contexts();
         await Promise.all(contexts.map(context => context.close().catch(() => {})));
-        
-        // Close the browser
         await browser.close();
         console.log('[search] browser closed');
       } catch (error) {
         console.log('[search] cleanup error:', error.message);
       }
     }
+    
+    res.json({ totalResults, results: items });
+  } catch (err) {
+    console.error('[search] error', err);
+    
+    // Cleanup on error too
+    if (browser) {
+      try {
+        const contexts = browser.contexts();
+        await Promise.all(contexts.map(context => context.close().catch(() => {})));
+        await browser.close();
+        console.log('[search] browser closed on error');
+      } catch (error) {
+        console.log('[search] cleanup error:', error.message);
+      }
+    }
+    
+    if (err?.name === 'TimeoutError' || /waitForSelector|Navigation|net::ERR/i.test(String(err?.message || ''))) {
+      res.json({ totalResults: null, results: [] });
+      return;
+    }
+    res.status(500).json({ error: 'Failed to fetch results' });
   }
 });
 
@@ -403,9 +413,7 @@ app.get('/search-sold', async (req, res) => {
         '--disable-extensions',
         '--disable-plugins',
         '--disable-images',
-        '--disable-web-security',
-        '--single-process',
-        '--no-zygote'
+        '--disable-web-security'
       ]
     });
     const context = await browser.newContext({
@@ -661,28 +669,40 @@ app.get('/search-sold', async (req, res) => {
     }
 
     console.log(`[search-sold] extracted items=${items.length}`);
-    res.json({ totalResults, results: items });
-  } catch (err) {
-    console.error('[search-sold] error', err);
-    if (err?.name === 'TimeoutError' || /waitForSelector|Navigation|net::ERR/i.test(String(err?.message || ''))) {
-      res.json({ totalResults: null, results: [] });
-      return;
-    }
-    res.status(500).json({ error: 'Failed to fetch results' });
-  } finally {
+    
+    // Cleanup before sending response
     if (browser) {
       try {
-        // Close all contexts first (which contain pages)
         const contexts = browser.contexts();
         await Promise.all(contexts.map(context => context.close().catch(() => {})));
-        
-        // Close the browser
         await browser.close();
         console.log('[search-sold] browser closed');
       } catch (error) {
         console.log('[search-sold] cleanup error:', error.message);
       }
     }
+    
+    res.json({ totalResults, results: items });
+  } catch (err) {
+    console.error('[search-sold] error', err);
+    
+    // Cleanup on error too
+    if (browser) {
+      try {
+        const contexts = browser.contexts();
+        await Promise.all(contexts.map(context => context.close().catch(() => {})));
+        await browser.close();
+        console.log('[search-sold] browser closed on error');
+      } catch (error) {
+        console.log('[search-sold] cleanup error:', error.message);
+      }
+    }
+    
+    if (err?.name === 'TimeoutError' || /waitForSelector|Navigation|net::ERR/i.test(String(err?.message || ''))) {
+      res.json({ totalResults: null, results: [] });
+      return;
+    }
+    res.status(500).json({ error: 'Failed to fetch results' });
   }
 });
 
