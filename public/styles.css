@@ -216,6 +216,64 @@ button:hover { background: #45a049; }
   border-bottom: none;
 }
 
+/* Sellthrough Rate (STR) Styles */
+.str-header h2 {
+  color: #ffffff;
+  margin: 0 0 16px 0;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.str-content {
+  text-align: center;
+  padding: 20px;
+}
+
+.str-value {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.str-calculation {
+  color: #888;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* STR Color Classes */
+.str-red {
+  color: #ff4444;
+}
+
+.str-orange {
+  color: #ff8800;
+}
+
+.str-yellow {
+  color: #ffdd00;
+}
+
+.str-green {
+  color: #44ff44;
+}
+
+.str-rainbow {
+  background: linear-gradient(45deg, #ff0000, #ff8800, #ffff00, #00ff00, #0088ff, #8800ff, #ff0088);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: rainbow 2s ease-in-out infinite alternate;
+}
+
+@keyframes rainbow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
 .analytics-label {
   color: #888;
   font-weight: 500;
