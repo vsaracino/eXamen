@@ -352,19 +352,15 @@ form.addEventListener('submit', async (e) => {
   statusEl.textContent = 'Analyzing listings... This may take up to 30 seconds';
   
   try {
-    // Search both active and sold listings in parallel
-    const [activeRes, soldRes] = await Promise.all([
-      fetch(`/search?q=${encodeURIComponent(q)}`),
-      fetch(`/search-sold?q=${encodeURIComponent(q)}`)
-    ]);
-    
+    // Search active listings first
+    const activeRes = await fetch(`/search?q=${encodeURIComponent(q)}`);
     if (!activeRes.ok) throw new Error('Active search failed');
-    if (!soldRes.ok) throw new Error('Sold search failed');
+    const activeData = await activeRes.json();
     
-    const [activeData, soldData] = await Promise.all([
-      activeRes.json(),
-      soldRes.json()
-    ]);
+    // Then search sold listings
+    const soldRes = await fetch(`/search-sold?q=${encodeURIComponent(q)}`);
+    if (!soldRes.ok) throw new Error('Sold search failed');
+    const soldData = await soldRes.json();
     
     currentResults = activeData.results || [];
     currentSoldResults = soldData.results || [];
