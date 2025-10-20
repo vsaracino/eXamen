@@ -23,7 +23,24 @@ app.get('/search', async (req, res) => {
   let browser;
   try {
     console.log(`[search] start q="${keyword}" → ${searchUrl}`);
-    browser = await chromium.launch({ headless: true });
+    browser = await chromium.launch({ 
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--disable-gpu',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding',
+        '--disable-features=TranslateUI',
+        '--disable-ipc-flooding-protection',
+        '--memory-pressure-off'
+      ]
+    });
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
       viewport: { width: 1366, height: 900 },
@@ -31,10 +48,13 @@ app.get('/search', async (req, res) => {
     });
     const page = await context.newPage();
 
-    await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
     console.log('[search] navigated domcontentloaded');
-    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+    await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {});
     console.log('[search] networkidle (best-effort)');
+
+    // Add a small delay for page stability
+    await page.waitForTimeout(2000);
 
     try {
       const consentBtn = await page.locator('button:has-text("Accept")').first();
@@ -170,9 +190,9 @@ app.get('/search', async (req, res) => {
         
         await page.goto(nextPageUrl, { 
           waitUntil: 'domcontentloaded', 
-          timeout: 30000 
+          timeout: 60000 
         });
-        await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+        await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {});
         await page.waitForSelector('#srp-river-results li[data-viewport]', { timeout: 20000 }).catch(() => {});
         
         // Extract additional items from page 2 (up to remaining items needed)
@@ -355,7 +375,24 @@ app.get('/search-sold', async (req, res) => {
 
   let browser;
   try {
-    browser = await chromium.launch({ headless: true });
+    browser = await chromium.launch({ 
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--disable-gpu',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding',
+        '--disable-features=TranslateUI',
+        '--disable-ipc-flooding-protection',
+        '--memory-pressure-off'
+      ]
+    });
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
       viewport: { width: 1366, height: 900 },
@@ -363,9 +400,9 @@ app.get('/search-sold', async (req, res) => {
     });
     const page = await context.newPage();
 
-    await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
     console.log('[search-sold] navigated domcontentloaded');
-    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+    await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {});
     console.log('[search-sold] networkidle (best-effort)');
 
     try {
@@ -502,9 +539,9 @@ app.get('/search-sold', async (req, res) => {
         
         await page.goto(nextPageUrl, { 
           waitUntil: 'domcontentloaded', 
-          timeout: 30000 
+          timeout: 60000 
         });
-        await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+        await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {});
         await page.waitForSelector('#srp-river-results li[data-viewport]', { timeout: 20000 }).catch(() => {});
         
         // Extract additional items from page 2 (up to remaining items needed)
