@@ -369,20 +369,15 @@ app.get('/search', async (req, res) => {
   } finally {
     if (browser) {
       try {
+        // Wait a bit to ensure all operations are complete
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // Close all contexts first (which contain pages)
         const contexts = browser.contexts();
         await Promise.all(contexts.map(context => context.close().catch(() => {})));
         
-        // Force close the browser
+        // Close the browser
         await browser.close().catch(() => {});
-        
-        // Longer delay to ensure complete cleanup
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Force garbage collection if available
-        if (global.gc) {
-          global.gc();
-        }
         
         console.log('[search] browser closed');
       } catch (error) {
@@ -694,20 +689,15 @@ app.get('/search-sold', async (req, res) => {
   } finally {
     if (browser) {
       try {
+        // Wait a bit to ensure all operations are complete
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // Close all contexts first (which contain pages)
         const contexts = browser.contexts();
         await Promise.all(contexts.map(context => context.close().catch(() => {})));
         
-        // Force close the browser
+        // Close the browser
         await browser.close().catch(() => {});
-        
-        // Longer delay to ensure complete cleanup
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Force garbage collection if available
-        if (global.gc) {
-          global.gc();
-        }
         
         console.log('[search-sold] browser closed');
       } catch (error) {
