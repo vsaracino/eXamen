@@ -47,7 +47,6 @@ app.get('/search', async (req, res) => {
         '--disable-extensions',
         '--disable-plugins',
         '--disable-images',
-        '--disable-javascript',
         '--disable-web-security',
         '--disable-features=VizDisplayCompositor'
       ]
@@ -423,7 +422,6 @@ app.get('/search-sold', async (req, res) => {
         '--disable-extensions',
         '--disable-plugins',
         '--disable-images',
-        '--disable-javascript',
         '--disable-web-security',
         '--disable-features=VizDisplayCompositor'
       ]
