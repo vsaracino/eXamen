@@ -90,8 +90,8 @@ app.get('/search', async (req, res) => {
     // Extract items from first page (up to 60 items)
     const items = [];
     const diagnostics = [];
-    const maxItems = Math.min(totalResults || 100, 100); // Cap at 100 items
-    const itemsPerPage = 60; // eBay shows 60 items per page
+    const maxItems = Math.min(totalResults || 20, 20); // Cap at 20 items for testing
+    const itemsPerPage = 20; // Reduced for testing
     
     // Use evaluateAll to avoid stale locator issues
     const allResults = await page.locator('#srp-river-results li[data-viewport]').evaluateAll((elements) => {
@@ -192,8 +192,8 @@ app.get('/search', async (req, res) => {
       }
     }
 
-    // If we need more items and have more pages, try page 2
-    if (items.length < maxItems && totalResults > itemsPerPage) {
+    // Skip page 2 for testing - only use first page
+    if (false && items.length < maxItems && totalResults > itemsPerPage) {
       console.log(`[extract] Attempting page 2 to get more items (current: ${items.length}, target: ${maxItems})`);
       
       try {
@@ -372,9 +372,9 @@ app.get('/search', async (req, res) => {
   } finally {
     if (browser) {
       try {
-        // Force close all pages and contexts
-        const pages = await browser.pages();
-        await Promise.all(pages.map(page => page.close().catch(() => {})));
+        // Close all contexts first (which contain pages)
+        const contexts = browser.contexts();
+        await Promise.all(contexts.map(context => context.close().catch(() => {})));
         
         // Close the browser
         await browser.close();
@@ -461,8 +461,8 @@ app.get('/search-sold', async (req, res) => {
     // Extract items from first page (up to 60 items)
     const items = [];
     const diagnostics = [];
-    const maxItems = Math.min(totalResults || 100, 100); // Cap at 100 items
-    const itemsPerPage = 60; // eBay shows 60 items per page
+    const maxItems = Math.min(totalResults || 20, 20); // Cap at 20 items for testing
+    const itemsPerPage = 20; // Reduced for testing
     
     // Use evaluateAll to avoid stale locator issues
     const allResults = await page.locator('#srp-river-results li[data-viewport]').evaluateAll((elements) => {
@@ -563,8 +563,8 @@ app.get('/search-sold', async (req, res) => {
       }
     }
 
-    // If we need more items and have more pages, try page 2
-    if (items.length < maxItems && totalResults > itemsPerPage) {
+    // Skip page 2 for testing - only use first page
+    if (false && items.length < maxItems && totalResults > itemsPerPage) {
       console.log(`[extract-sold] Attempting page 2 to get more items (current: ${items.length}, target: ${maxItems})`);
       
       try {
@@ -690,9 +690,9 @@ app.get('/search-sold', async (req, res) => {
   } finally {
     if (browser) {
       try {
-        // Force close all pages and contexts
-        const pages = await browser.pages();
-        await Promise.all(pages.map(page => page.close().catch(() => {})));
+        // Close all contexts first (which contain pages)
+        const contexts = browser.contexts();
+        await Promise.all(contexts.map(context => context.close().catch(() => {})));
         
         // Close the browser
         await browser.close();
