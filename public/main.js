@@ -304,8 +304,8 @@ function renderSTR() {
   strWrapper.style.display = 'block';
   
   // Calculate STR: Sold / Active * 100
-  const activeCount = currentResults.length;
-  const soldCount = currentSoldResults.length;
+  const activeCount = window.lastTotalResults || 0;
+  const soldCount = window.lastSoldTotalResults || 0;
   const str = activeCount > 0 ? (soldCount / activeCount) * 100 : 0;
   
   // Determine color based on STR value
