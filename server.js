@@ -11,13 +11,24 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Global browser instance to avoid resource accumulation
-let globalBrowser = null;
 
-async function getBrowser() {
-  if (!globalBrowser || !globalBrowser.isConnected()) {
-    console.log('[browser] Creating new browser instance');
-    globalBrowser = await chromium.launch({ 
+app.get('/search', async (req, res) => {
+  const keyword = (req.query.q || '').toString().trim();
+  if (!keyword) {
+    res.status(400).json({ error: 'Missing query parameter q' });
+    return;
+  }
+
+  // Set longer timeout for Railway
+  req.setTimeout(120000); // 2 minutes
+  res.setTimeout(120000); // 2 minutes
+
+  const searchUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(keyword)}`;
+
+  let browser;
+  try {
+    console.log(`[search] start q="${keyword}" → ${searchUrl}`);
+    browser = await chromium.launch({ 
       headless: true,
       args: [
         '--no-sandbox',
@@ -41,28 +52,7 @@ async function getBrowser() {
         '--disable-features=VizDisplayCompositor'
       ]
     });
-  }
-  return globalBrowser;
-}
-
-app.get('/search', async (req, res) => {
-  const keyword = (req.query.q || '').toString().trim();
-  if (!keyword) {
-    res.status(400).json({ error: 'Missing query parameter q' });
-    return;
-  }
-
-  // Set longer timeout for Railway
-  req.setTimeout(120000); // 2 minutes
-  res.setTimeout(120000); // 2 minutes
-
-  const searchUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(keyword)}`;
-
-  let context;
-  try {
-    console.log(`[search] start q="${keyword}" → ${searchUrl}`);
-    const browser = await getBrowser();
-    context = await browser.newContext({
+    const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
       viewport: { width: 1366, height: 900 },
       locale: 'en-US'
@@ -380,11 +370,15 @@ app.get('/search', async (req, res) => {
     }
     res.status(500).json({ error: 'Failed to fetch results' });
   } finally {
-    if (context) {
+    if (browser) {
       try {
-        // Just close the context, not the browser
-        await context.close();
-        console.log('[search] context closed');
+        // Force close all pages and contexts
+        const pages = await browser.pages();
+        await Promise.all(pages.map(page => page.close().catch(() => {})));
+        
+        // Close the browser
+        await browser.close();
+        console.log('[search] browser closed');
       } catch (error) {
         console.log('[search] cleanup error:', error.message);
       }
@@ -406,10 +400,33 @@ app.get('/search-sold', async (req, res) => {
   const searchUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(keyword)}&LH_Complete=1&LH_Sold=1`;
   console.log(`[search-sold] start q="${keyword}" → ${searchUrl}`);
 
-  let context;
+  let browser;
   try {
-    const browser = await getBrowser();
-    context = await browser.newContext({
+    browser = await chromium.launch({ 
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--disable-gpu',
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding',
+        '--disable-features=TranslateUI',
+        '--disable-ipc-flooding-protection',
+        '--memory-pressure-off',
+        '--max_old_space_size=4096',
+        '--disable-extensions',
+        '--disable-plugins',
+        '--disable-images',
+        '--disable-web-security',
+        '--disable-features=VizDisplayCompositor'
+      ]
+    });
+    const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
       viewport: { width: 1366, height: 900 },
       locale: 'en-US'
@@ -671,11 +688,15 @@ app.get('/search-sold', async (req, res) => {
     }
     res.status(500).json({ error: 'Failed to fetch results' });
   } finally {
-    if (context) {
+    if (browser) {
       try {
-        // Just close the context, not the browser
-        await context.close();
-        console.log('[search-sold] context closed');
+        // Force close all pages and contexts
+        const pages = await browser.pages();
+        await Promise.all(pages.map(page => page.close().catch(() => {})));
+        
+        // Close the browser
+        await browser.close();
+        console.log('[search-sold] browser closed');
       } catch (error) {
         console.log('[search-sold] cleanup error:', error.message);
       }

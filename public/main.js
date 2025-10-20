@@ -357,6 +357,9 @@ form.addEventListener('submit', async (e) => {
     if (!activeRes.ok) throw new Error('Active search failed');
     const activeData = await activeRes.json();
     
+    // Add a small delay between searches to prevent resource conflicts
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     // Then search sold listings
     const soldRes = await fetch(`/search-sold?q=${encodeURIComponent(q)}`);
     if (!soldRes.ok) throw new Error('Sold search failed');
