@@ -18,6 +18,10 @@ app.get('/search', async (req, res) => {
     return;
   }
 
+  // Set longer timeout for Railway
+  req.setTimeout(120000); // 2 minutes
+  res.setTimeout(120000); // 2 minutes
+
   const searchUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(keyword)}`;
 
   let browser;
@@ -38,7 +42,14 @@ app.get('/search', async (req, res) => {
         '--disable-renderer-backgrounding',
         '--disable-features=TranslateUI',
         '--disable-ipc-flooding-protection',
-        '--memory-pressure-off'
+        '--memory-pressure-off',
+        '--max_old_space_size=4096',
+        '--disable-extensions',
+        '--disable-plugins',
+        '--disable-images',
+        '--disable-javascript',
+        '--disable-web-security',
+        '--disable-features=VizDisplayCompositor'
       ]
     });
     const context = await browser.newContext({
@@ -357,7 +368,12 @@ app.get('/search', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch results' });
   } finally {
     if (browser) {
+      // Close all contexts first (which contain pages)
+      const contexts = browser.contexts();
+      await Promise.all(contexts.map(context => context.close().catch(() => {})));
       await browser.close().catch(() => {});
+      // Small delay to ensure cleanup
+      await new Promise(resolve => setTimeout(resolve, 100));
       console.log('[search] browser closed');
     }
   }
@@ -369,6 +385,10 @@ app.get('/search-sold', async (req, res) => {
     res.status(400).json({ error: 'Missing query parameter q' });
     return;
   }
+
+  // Set longer timeout for Railway
+  req.setTimeout(120000); // 2 minutes
+  res.setTimeout(120000); // 2 minutes
 
   const searchUrl = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(keyword)}&LH_Complete=1&LH_Sold=1`;
   console.log(`[search-sold] start q="${keyword}" → ${searchUrl}`);
@@ -390,7 +410,14 @@ app.get('/search-sold', async (req, res) => {
         '--disable-renderer-backgrounding',
         '--disable-features=TranslateUI',
         '--disable-ipc-flooding-protection',
-        '--memory-pressure-off'
+        '--memory-pressure-off',
+        '--max_old_space_size=4096',
+        '--disable-extensions',
+        '--disable-plugins',
+        '--disable-images',
+        '--disable-javascript',
+        '--disable-web-security',
+        '--disable-features=VizDisplayCompositor'
       ]
     });
     const context = await browser.newContext({
@@ -653,7 +680,12 @@ app.get('/search-sold', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch results' });
   } finally {
     if (browser) {
+      // Close all contexts first (which contain pages)
+      const contexts = browser.contexts();
+      await Promise.all(contexts.map(context => context.close().catch(() => {})));
       await browser.close().catch(() => {});
+      // Small delay to ensure cleanup
+      await new Promise(resolve => setTimeout(resolve, 100));
       console.log('[search-sold] browser closed');
     }
   }
