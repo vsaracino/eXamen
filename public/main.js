@@ -349,7 +349,7 @@ form.addEventListener('submit', async (e) => {
   renderSoldResults();
   renderSTR();
   summaryEl.textContent = '';
-  statusEl.textContent = 'Analyzing eBay listings... This may take 30-60 seconds as we gather both active and sold data across multiple pages.';
+  statusEl.textContent = 'Analyzing listings... This may take up to 30 seconds';
   
   try {
     // Search both active and sold listings in parallel

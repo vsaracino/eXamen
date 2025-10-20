@@ -340,7 +340,7 @@ button:hover { background: #45a049; }
 
 @media (max-width: 480px) {
   body {
-    padding: 12px;
+    padding: 8px;
   }
   
   h1 {
@@ -349,16 +349,121 @@ button:hover { background: #45a049; }
   
   .search-container,
   .results-container {
-    padding: 10px 12px 12px 12px;
+    padding: 8px 12px 12px 12px;
   }
   
   form {
-    flex-direction: column;
-    gap: 8px;
+    flex-direction: row;
+    gap: 6px;
   }
   
   .str-value {
     font-size: 2rem;
+  }
+  
+  /* Force mobile layout with maximum specificity */
+  #results-wrapper .analytics-panels-container,
+  #sold-results-wrapper .analytics-panels-container {
+    flex-direction: row !important;
+    gap: 6px !important;
+  }
+  
+  #results-wrapper .panels-wrapper,
+  #sold-results-wrapper .panels-wrapper {
+    flex-direction: row !important;
+    gap: 6px !important;
+  }
+  
+  /* Make other elements smaller for mobile */
+  h1 {
+    font-size: 1.2rem !important;
+  }
+  
+  input[type="text"] {
+    font-size: 0.7rem !important;
+    padding: 4px 6px !important;
+    flex: 1;
+  }
+  
+  button[type="submit"] {
+    font-size: 0.6rem !important;
+    padding: 4px 8px !important;
+    flex-shrink: 0;
+  }
+  
+  .view-listings-btn {
+    font-size: 0.6rem !important;
+    padding: 3px 6px !important;
+    margin: 4px 0 !important;
+    text-align: center !important;
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  
+  #status {
+    font-size: 0.7rem !important;
+    padding: 4px 0 !important;
+  }
+  
+  .total-results-header h2 {
+    font-size: 0.7rem !important;
+  }
+  
+  .result-item {
+    padding: 4px 0 !important;
+  }
+  
+  .result-title {
+    font-size: 0.6rem !important;
+  }
+  
+  .result-meta {
+    font-size: 0.6rem !important;
+  }
+  
+  /* Analytics cards - more readable but still compact */
+  #results-wrapper .analytics-panel,
+  #sold-results-wrapper .analytics-panel {
+    padding: 6px !important;
+    margin: 0 !important;
+    flex: 1 !important;
+    min-width: unset !important;
+    max-width: unset !important;
+  }
+  
+  #results-wrapper .analytics-header h3,
+  #sold-results-wrapper .analytics-header h3 {
+    font-size: 0.7rem !important;
+    margin: 0 0 3px 0 !important;
+    padding: 0 !important;
+  }
+  
+  #results-wrapper .analytics-content,
+  #sold-results-wrapper .analytics-content {
+    gap: 2px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  #results-wrapper .analytics-item,
+  #sold-results-wrapper .analytics-item {
+    padding: 2px 0 !important;
+    margin: 0 !important;
+  }
+  
+  #results-wrapper .analytics-label,
+  #sold-results-wrapper .analytics-label {
+    font-size: 0.6rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  #results-wrapper .analytics-value,
+  #sold-results-wrapper .analytics-value {
+    font-size: 0.7rem !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 }
 
