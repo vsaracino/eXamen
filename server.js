@@ -92,101 +92,102 @@ app.get('/search', async (req, res) => {
     const maxItems = Math.min(totalResults || 100, 100); // Cap at 100 items
     const itemsPerPage = 60; // eBay shows 60 items per page
     
-    for (let i = 0; i < Math.min(maxItems, itemsPerPage); i++) {
-      try {
-        const result = await page.locator('#srp-river-results li[data-viewport]').nth(i).evaluate((el) => {
-          const KNOWN_CONDITIONS = [
-            'Brand New','New','New without box','Open Box','Certified Refurbished','Seller Refurbished','Refurbished',
-            'Used','Pre-Owned','Preowned','For parts or not working','For parts','Like New','Very Good','Good','Acceptable'
-          ];
-          const conditionRegex = new RegExp(`\\b(${KNOWN_CONDITIONS.map(c => c.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&')).join('|')})\\b`, 'i');
-          const currencyRegex = /(?:(?:US\s*)?\$)\s?\d{1,3}(?:,\d{3})*(?:\.\d{2})?/;
+    // Use evaluateAll to avoid stale locator issues
+    const allResults = await page.locator('#srp-river-results li[data-viewport]').evaluateAll((elements) => {
+      const KNOWN_CONDITIONS = [
+        'Brand New','New','New without box','Open Box','Certified Refurbished','Seller Refurbished','Refurbished',
+        'Used','Pre-Owned','Preowned','For parts or not working','For parts','Like New','Very Good','Good','Acceptable'
+      ];
+      const conditionRegex = new RegExp(`\\b(${KNOWN_CONDITIONS.map(c => c.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&')).join('|')})\\b`, 'i');
+      const currencyRegex = /(?:(?:US\s*)?\$)\s?\d{1,3}(?:,\d{3})*(?:\.\d{2})?/;
 
-          const normalize = (s) => (s || '').replace(/[\u00A0\u200B\u200C\u200D]/g, ' ').replace(/\s+/g, ' ').trim();
-          const getText = (el) => normalize(el && el.textContent ? el.textContent : '');
+      const normalize = (s) => (s || '').replace(/[\u00A0\u200B\u200C\u200D]/g, ' ').replace(/\s+/g, ' ').trim();
+      const getText = (el) => normalize(el && el.textContent ? el.textContent : '');
 
-          const linkEl = el.querySelector('a[href*="/itm/"]') || el.querySelector('a');
-          let url = linkEl?.getAttribute('href') || null;
-          if (!url) return { success: false, reason: 'no url' };
-          if (!/^https?:\/\//i.test(url)) {
-            url = 'https://www.ebay.com' + (url.startsWith('/') ? url : '/' + url);
-          }
-          if (!/\/itm\//.test(url)) {
-            return { success: false, reason: 'url does not contain /itm/', url };
-          }
-
-          // Use the correct selectors from the real listing structure
-          const titleEl = el.querySelector('.s-card__title .su-styled-text.primary.default') || 
-                         el.querySelector('.s-card__title span.su-styled-text.primary.default') ||
-                         el.querySelector('.s-card__title .su-styled-text.primary') ||
-                         el.querySelector('.s-card__title span');
-          let title = getText(titleEl);
-          
-          title = normalize(title);
-          // Filter out promotional and non-listing content
-          if (!title || 
-              /shop on ebay/i.test(title) || 
-              /find similar items/i.test(title) ||
-              /see all the items/i.test(title) ||
-              /results matching fewer words/i.test(title) ||
-              title.length < 10) {
-            return { success: false, reason: 'invalid title (promotional/filtered)', title };
-          }
-
-          let price = getText(el.querySelector('.s-card__price.su-styled-text.primary.bold.large-1')) ||
-                     getText(el.querySelector('.s-card__attribute-row .su-styled-text.primary.bold.large-1')) ||
-                     getText(el.querySelector('.su-styled-text.primary.bold.large-1.s-card__price')) ||
-                     '';
-          if (!price) {
-            const candidates = Array.from(el.querySelectorAll('span, div')).map(n => getText(n)).filter(Boolean);
-            for (const t of candidates) {
-              const m = t.match(currencyRegex);
-              if (m) { price = normalize(m[0]); break; }
-            }
-          }
-          if (!price) {
-            return { success: false, reason: 'no price', price };
-          }
-
-          let condition = getText(el.querySelector('.s-card__subtitle .su-styled-text.secondary.default')) ||
-                         getText(el.querySelector('.s-card__subtitle-row .su-styled-text.secondary.default')) ||
-                         getText(el.querySelector('.su-styled-text.secondary.default')) ||
-                         '';
-          if (!condition) {
-            const m = (el.textContent || '').match(conditionRegex);
-            if (m) condition = normalize(m[1]);
-          }
-          if (!condition) condition = 'Unknown';
-          
-          // Normalize condition display
-          if (condition.toLowerCase().includes('pre-owned')) {
-            condition = 'Used';
-          } else if (condition.toLowerCase().includes('brand new')) {
-            condition = 'New';
-          }
-
-          return { 
-            success: true, 
-            item: { title, url, price, condition }
-          };
-        });
-
-        if (result.success) {
-          items.push(result.item);
-          console.log(`[extract] SUCCESS: item ${i} extracted`);
-          
-          // If we've extracted 60 items and need more, break to move to page 2
-          if (items.length >= itemsPerPage && maxItems > itemsPerPage) {
-            console.log(`[extract] Reached ${itemsPerPage} items on page 1, moving to page 2`);
-            break;
-          }
-        } else {
-          diagnostics.push({ index: i, ...result });
-          console.log(`[extract] item ${i}: REJECTED - ${result.reason}`);
+      return elements.map((el, index) => {
+        const linkEl = el.querySelector('a[href*="/itm/"]') || el.querySelector('a');
+        let url = linkEl?.getAttribute('href') || null;
+        if (!url) return { success: false, reason: 'no url', index };
+        if (!/^https?:\/\//i.test(url)) {
+          url = 'https://www.ebay.com' + (url.startsWith('/') ? url : '/' + url);
         }
-      } catch (err) {
-        console.log(`[extract] item ${i}: ERROR - ${err.message}`);
-        break; // Stop if we can't access more items
+        if (!/\/itm\//.test(url)) {
+          return { success: false, reason: 'url does not contain /itm/', url, index };
+        }
+
+        // Use the correct selectors from the real listing structure
+        const titleEl = el.querySelector('.s-card__title .su-styled-text.primary.default') || 
+                       el.querySelector('.s-card__title span.su-styled-text.primary.default') ||
+                       el.querySelector('.s-card__title .su-styled-text.primary') ||
+                       el.querySelector('.s-card__title span');
+        let title = getText(titleEl);
+        
+        title = normalize(title);
+        // Filter out promotional and non-listing content
+        if (!title || 
+            /shop on ebay/i.test(title) || 
+            /find similar items/i.test(title) ||
+            /see all the items/i.test(title) ||
+            /results matching fewer words/i.test(title) ||
+            title.length < 10) {
+          return { success: false, reason: 'invalid title (promotional/filtered)', title, index };
+        }
+
+        let price = getText(el.querySelector('.s-card__price.su-styled-text.primary.bold.large-1')) ||
+                   getText(el.querySelector('.s-card__attribute-row .su-styled-text.primary.bold.large-1')) ||
+                   getText(el.querySelector('.su-styled-text.primary.bold.large-1.s-card__price')) ||
+                   '';
+        if (!price) {
+          const candidates = Array.from(el.querySelectorAll('span, div')).map(n => getText(n)).filter(Boolean);
+          for (const t of candidates) {
+            const m = t.match(currencyRegex);
+            if (m) { price = normalize(m[0]); break; }
+          }
+        }
+        if (!price) {
+          return { success: false, reason: 'no price', price, index };
+        }
+
+        let condition = getText(el.querySelector('.s-card__subtitle .su-styled-text.secondary.default')) ||
+                       getText(el.querySelector('.s-card__subtitle-row .su-styled-text.secondary.default')) ||
+                       getText(el.querySelector('.su-styled-text.secondary.default')) ||
+                       '';
+        if (!condition) {
+          const m = (el.textContent || '').match(conditionRegex);
+          if (m) condition = normalize(m[1]);
+        }
+        if (!condition) condition = 'Unknown';
+        
+        // Normalize condition display
+        if (condition.toLowerCase().includes('pre-owned')) {
+          condition = 'Used';
+        } else if (condition.toLowerCase().includes('brand new')) {
+          condition = 'New';
+        }
+
+        return { 
+          success: true, 
+          item: { title, url, price, condition },
+          index
+        };
+      });
+    });
+
+    // Process results and take only what we need
+    for (let i = 0; i < Math.min(allResults.length, maxItems, itemsPerPage); i++) {
+      const result = allResults[i];
+      if (result.success) {
+        items.push(result.item);
+        console.log(`[extract] SUCCESS: item ${i} extracted`);
+        
+        // If we've extracted 60 items and need more, break to move to page 2
+        if (items.length >= itemsPerPage && maxItems > itemsPerPage) {
+          console.log(`[extract] Reached ${itemsPerPage} items on page 1, moving to page 2`);
+          break;
+        }
+      } else {
+        diagnostics.push({ index: i, ...result });
+        console.log(`[extract] item ${i}: REJECTED - ${result.reason}`);
       }
     }
 
@@ -207,94 +208,96 @@ app.get('/search', async (req, res) => {
         
         // Extract additional items from page 2 (up to remaining items needed)
         const remainingItems = Math.min(maxItems - items.length, itemsPerPage);
-        for (let i = 0; i < remainingItems; i++) {
-          try {
-            const result = await page.locator('#srp-river-results li[data-viewport]').nth(i).evaluate((el) => {
-              const KNOWN_CONDITIONS = [
-                'Brand New','New','New without box','Open Box','Certified Refurbished','Seller Refurbished','Refurbished',
-                'Used','Pre-Owned','Preowned','For parts or not working','For parts','Like New','Very Good','Good','Acceptable'
-              ];
-              const conditionRegex = new RegExp(`\\b(${KNOWN_CONDITIONS.map(c => c.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&')).join('|')})\\b`, 'i');
-              const currencyRegex = /(?:(?:US\s*)?\$)\s?\d{1,3}(?:,\d{3})*(?:\.\d{2})?/;
+        
+        // Use evaluateAll for page 2 as well
+        const page2Results = await page.locator('#srp-river-results li[data-viewport]').evaluateAll((elements) => {
+          const KNOWN_CONDITIONS = [
+            'Brand New','New','New without box','Open Box','Certified Refurbished','Seller Refurbished','Refurbished',
+            'Used','Pre-Owned','Preowned','For parts or not working','For parts','Like New','Very Good','Good','Acceptable'
+          ];
+          const conditionRegex = new RegExp(`\\b(${KNOWN_CONDITIONS.map(c => c.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&')).join('|')})\\b`, 'i');
+          const currencyRegex = /(?:(?:US\s*)?\$)\s?\d{1,3}(?:,\d{3})*(?:\.\d{2})?/;
 
-              const normalize = (s) => (s || '').replace(/[\u00A0\u200B\u200C\u200D]/g, ' ').replace(/\s+/g, ' ').trim();
-              const getText = (el) => normalize(el && el.textContent ? el.textContent : '');
+          const normalize = (s) => (s || '').replace(/[\u00A0\u200B\u200C\u200D]/g, ' ').replace(/\s+/g, ' ').trim();
+          const getText = (el) => normalize(el && el.textContent ? el.textContent : '');
 
-              const linkEl = el.querySelector('a[href*="/itm/"]') || el.querySelector('a');
-              let url = linkEl?.getAttribute('href') || null;
-              if (!url) return { success: false, reason: 'no url' };
-              if (!/^https?:\/\//i.test(url)) {
-                url = 'https://www.ebay.com' + (url.startsWith('/') ? url : '/' + url);
-              }
-              if (!/\/itm\//.test(url)) {
-                return { success: false, reason: 'url does not contain /itm/', url };
-              }
-
-              // Use the correct selectors from the real listing structure
-              const titleEl = el.querySelector('.s-card__title .su-styled-text.primary.default') || 
-                             el.querySelector('.s-card__title span.su-styled-text.primary.default') ||
-                             el.querySelector('.s-card__title .su-styled-text.primary') ||
-                             el.querySelector('.s-card__title span');
-              let title = getText(titleEl);
-              
-              title = normalize(title);
-              // Filter out promotional and non-listing content
-              if (!title || 
-                  /shop on ebay/i.test(title) || 
-                  /find similar items/i.test(title) ||
-                  /see all the items/i.test(title) ||
-                  /results matching fewer words/i.test(title) ||
-                  title.length < 10) {
-                return { success: false, reason: 'invalid title (promotional/filtered)', title };
-              }
-
-              let price = getText(el.querySelector('.s-card__price.su-styled-text.primary.bold.large-1')) ||
-                         getText(el.querySelector('.s-card__attribute-row .su-styled-text.primary.bold.large-1')) ||
-                         getText(el.querySelector('.su-styled-text.primary.bold.large-1.s-card__price')) ||
-                         '';
-              if (!price) {
-                const candidates = Array.from(el.querySelectorAll('span, div')).map(n => getText(n)).filter(Boolean);
-                for (const t of candidates) {
-                  const m = t.match(currencyRegex);
-                  if (m) { price = normalize(m[0]); break; }
-                }
-              }
-              if (!price) {
-                return { success: false, reason: 'no price', price };
-              }
-
-              let condition = getText(el.querySelector('.s-card__subtitle .su-styled-text.secondary.default')) ||
-                             getText(el.querySelector('.s-card__subtitle-row .su-styled-text.secondary.default')) ||
-                             getText(el.querySelector('.su-styled-text.secondary.default')) ||
-                             '';
-              if (!condition) {
-                const m = (el.textContent || '').match(conditionRegex);
-                if (m) condition = normalize(m[1]);
-              }
-              if (!condition) condition = 'Unknown';
-              
-              // Normalize condition display
-              if (condition.toLowerCase().includes('pre-owned')) {
-                condition = 'Used';
-              } else if (condition.toLowerCase().includes('brand new')) {
-                condition = 'New';
-              }
-
-              return { 
-                success: true, 
-                item: { title, url, price, condition }
-              };
-            });
-
-            if (result.success) {
-              items.push(result.item);
-              console.log(`[extract] SUCCESS: page 2 item ${i} extracted`);
-            } else {
-              console.log(`[extract] page 2 item ${i}: REJECTED - ${result.reason}`);
+          return elements.map((el, index) => {
+            const linkEl = el.querySelector('a[href*="/itm/"]') || el.querySelector('a');
+            let url = linkEl?.getAttribute('href') || null;
+            if (!url) return { success: false, reason: 'no url', index };
+            if (!/^https?:\/\//i.test(url)) {
+              url = 'https://www.ebay.com' + (url.startsWith('/') ? url : '/' + url);
             }
-          } catch (err) {
-            console.log(`[extract] page 2 item ${i}: ERROR - ${err.message}`);
-            break;
+            if (!/\/itm\//.test(url)) {
+              return { success: false, reason: 'url does not contain /itm/', url, index };
+            }
+
+            // Use the correct selectors from the real listing structure
+            const titleEl = el.querySelector('.s-card__title .su-styled-text.primary.default') || 
+                           el.querySelector('.s-card__title span.su-styled-text.primary.default') ||
+                           el.querySelector('.s-card__title .su-styled-text.primary') ||
+                           el.querySelector('.s-card__title span');
+            let title = getText(titleEl);
+            
+            title = normalize(title);
+            // Filter out promotional and non-listing content
+            if (!title || 
+                /shop on ebay/i.test(title) || 
+                /find similar items/i.test(title) ||
+                /see all the items/i.test(title) ||
+                /results matching fewer words/i.test(title) ||
+                title.length < 10) {
+              return { success: false, reason: 'invalid title (promotional/filtered)', title, index };
+            }
+
+            let price = getText(el.querySelector('.s-card__price.su-styled-text.primary.bold.large-1')) ||
+                       getText(el.querySelector('.s-card__attribute-row .su-styled-text.primary.bold.large-1')) ||
+                       getText(el.querySelector('.su-styled-text.primary.bold.large-1.s-card__price')) ||
+                       '';
+            if (!price) {
+              const candidates = Array.from(el.querySelectorAll('span, div')).map(n => getText(n)).filter(Boolean);
+              for (const t of candidates) {
+                const m = t.match(currencyRegex);
+                if (m) { price = normalize(m[0]); break; }
+              }
+            }
+            if (!price) {
+              return { success: false, reason: 'no price', price, index };
+            }
+
+            let condition = getText(el.querySelector('.s-card__subtitle .su-styled-text.secondary.default')) ||
+                           getText(el.querySelector('.s-card__subtitle-row .su-styled-text.secondary.default')) ||
+                           getText(el.querySelector('.su-styled-text.secondary.default')) ||
+                           '';
+            if (!condition) {
+              const m = (el.textContent || '').match(conditionRegex);
+              if (m) condition = normalize(m[1]);
+            }
+            if (!condition) condition = 'Unknown';
+            
+            // Normalize condition display
+            if (condition.toLowerCase().includes('pre-owned')) {
+              condition = 'Used';
+            } else if (condition.toLowerCase().includes('brand new')) {
+              condition = 'New';
+            }
+
+            return { 
+              success: true, 
+              item: { title, url, price, condition },
+              index
+            };
+          });
+        });
+
+        // Process page 2 results
+        for (let i = 0; i < Math.min(page2Results.length, remainingItems); i++) {
+          const result = page2Results[i];
+          if (result.success) {
+            items.push(result.item);
+            console.log(`[extract] SUCCESS: page 2 item ${i} extracted`);
+          } else {
+            console.log(`[extract] page 2 item ${i}: REJECTED - ${result.reason}`);
           }
         }
         console.log(`[extract] Page 2 complete: extracted ${items.length} total items`);
@@ -464,101 +467,102 @@ app.get('/search-sold', async (req, res) => {
     const maxItems = Math.min(totalResults || 100, 100); // Cap at 100 items
     const itemsPerPage = 60; // eBay shows 60 items per page
     
-    for (let i = 0; i < Math.min(maxItems, itemsPerPage); i++) {
-      try {
-        const result = await page.locator('#srp-river-results li[data-viewport]').nth(i).evaluate((el) => {
-          const KNOWN_CONDITIONS = [
-            'Brand New','New','New without box','Open Box','Certified Refurbished','Seller Refurbished','Refurbished',
-            'Used','Pre-Owned','Preowned','For parts or not working','For parts','Like New','Very Good','Good','Acceptable'
-          ];
-          const conditionRegex = new RegExp(`\\b(${KNOWN_CONDITIONS.map(c => c.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&')).join('|')})\\b`, 'i');
-          const currencyRegex = /(?:(?:US\s*)?\$)\s?\d{1,3}(?:,\d{3})*(?:\.\d{2})?/;
+    // Use evaluateAll to avoid stale locator issues
+    const allResults = await page.locator('#srp-river-results li[data-viewport]').evaluateAll((elements) => {
+      const KNOWN_CONDITIONS = [
+        'Brand New','New','New without box','Open Box','Certified Refurbished','Seller Refurbished','Refurbished',
+        'Used','Pre-Owned','Preowned','For parts or not working','For parts','Like New','Very Good','Good','Acceptable'
+      ];
+      const conditionRegex = new RegExp(`\\b(${KNOWN_CONDITIONS.map(c => c.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&')).join('|')})\\b`, 'i');
+      const currencyRegex = /(?:(?:US\s*)?\$)\s?\d{1,3}(?:,\d{3})*(?:\.\d{2})?/;
 
-          const normalize = (s) => (s || '').replace(/[\u00A0\u200B\u200C\u200D]/g, ' ').replace(/\s+/g, ' ').trim();
-          const getText = (el) => normalize(el && el.textContent ? el.textContent : '');
+      const normalize = (s) => (s || '').replace(/[\u00A0\u200B\u200C\u200D]/g, ' ').replace(/\s+/g, ' ').trim();
+      const getText = (el) => normalize(el && el.textContent ? el.textContent : '');
 
-          const linkEl = el.querySelector('a[href*="/itm/"]') || el.querySelector('a');
-          let url = linkEl?.getAttribute('href') || null;
-          if (!url) return { success: false, reason: 'no url' };
-          if (!/^https?:\/\//i.test(url)) {
-            url = 'https://www.ebay.com' + (url.startsWith('/') ? url : '/' + url);
-          }
-          if (!/\/itm\//.test(url)) {
-            return { success: false, reason: 'url does not contain /itm/', url };
-          }
-
-          // Use the correct selectors from the real listing structure
-          const titleEl = el.querySelector('.s-card__title .su-styled-text.primary.default') || 
-                         el.querySelector('.s-card__title span.su-styled-text.primary.default') ||
-                         el.querySelector('.s-card__title .su-styled-text.primary') ||
-                         el.querySelector('.s-card__title span');
-          let title = getText(titleEl);
-          
-          title = normalize(title);
-          // Filter out promotional and non-listing content
-          if (!title || 
-              /shop on ebay/i.test(title) || 
-              /find similar items/i.test(title) ||
-              /see all the items/i.test(title) ||
-              /results matching fewer words/i.test(title) ||
-              title.length < 10) {
-            return { success: false, reason: 'invalid title (promotional/filtered)', title };
-          }
-
-          let price = getText(el.querySelector('.s-card__price.su-styled-text.primary.bold.large-1')) ||
-                     getText(el.querySelector('.s-card__attribute-row .su-styled-text.primary.bold.large-1')) ||
-                     getText(el.querySelector('.su-styled-text.primary.bold.large-1.s-card__price')) ||
-                     '';
-          if (!price) {
-            const candidates = Array.from(el.querySelectorAll('span, div')).map(n => getText(n)).filter(Boolean);
-            for (const t of candidates) {
-              const m = t.match(currencyRegex);
-              if (m) { price = normalize(m[0]); break; }
-            }
-          }
-          if (!price) {
-            return { success: false, reason: 'no price', price };
-          }
-
-          let condition = getText(el.querySelector('.s-card__subtitle .su-styled-text.secondary.default')) ||
-                           getText(el.querySelector('.s-card__subtitle-row .su-styled-text.secondary.default')) ||
-                           getText(el.querySelector('.su-styled-text.secondary.default')) ||
-                           '';
-          if (!condition) {
-            const m = (el.textContent || '').match(conditionRegex);
-            if (m) condition = normalize(m[1]);
-          }
-          if (!condition) condition = 'Unknown';
-          
-          // Normalize condition display
-          if (condition.toLowerCase().includes('pre-owned')) {
-            condition = 'Used';
-          } else if (condition.toLowerCase().includes('brand new')) {
-            condition = 'New';
-          }
-
-          return { 
-            success: true, 
-            item: { title, url, price, condition }
-          };
-        });
-
-        if (result.success) {
-          items.push(result.item);
-          console.log(`[extract-sold] SUCCESS: item ${i} extracted`);
-          
-          // If we've extracted 60 items and need more, break to move to page 2
-          if (items.length >= itemsPerPage && maxItems > itemsPerPage) {
-            console.log(`[extract-sold] Reached ${itemsPerPage} items on page 1, moving to page 2`);
-            break;
-          }
-        } else {
-          diagnostics.push({ index: i, ...result });
-          console.log(`[extract-sold] item ${i}: REJECTED - ${result.reason}`);
+      return elements.map((el, index) => {
+        const linkEl = el.querySelector('a[href*="/itm/"]') || el.querySelector('a');
+        let url = linkEl?.getAttribute('href') || null;
+        if (!url) return { success: false, reason: 'no url', index };
+        if (!/^https?:\/\//i.test(url)) {
+          url = 'https://www.ebay.com' + (url.startsWith('/') ? url : '/' + url);
         }
-      } catch (err) {
-        console.log(`[extract-sold] item ${i}: ERROR - ${err.message}`);
-        break; // Stop if we can't access more items
+        if (!/\/itm\//.test(url)) {
+          return { success: false, reason: 'url does not contain /itm/', url, index };
+        }
+
+        // Use the correct selectors from the real listing structure
+        const titleEl = el.querySelector('.s-card__title .su-styled-text.primary.default') || 
+                       el.querySelector('.s-card__title span.su-styled-text.primary.default') ||
+                       el.querySelector('.s-card__title .su-styled-text.primary') ||
+                       el.querySelector('.s-card__title span');
+        let title = getText(titleEl);
+        
+        title = normalize(title);
+        // Filter out promotional and non-listing content
+        if (!title || 
+            /shop on ebay/i.test(title) || 
+            /find similar items/i.test(title) ||
+            /see all the items/i.test(title) ||
+            /results matching fewer words/i.test(title) ||
+            title.length < 10) {
+          return { success: false, reason: 'invalid title (promotional/filtered)', title, index };
+        }
+
+        let price = getText(el.querySelector('.s-card__price.su-styled-text.primary.bold.large-1')) ||
+                   getText(el.querySelector('.s-card__attribute-row .su-styled-text.primary.bold.large-1')) ||
+                   getText(el.querySelector('.su-styled-text.primary.bold.large-1.s-card__price')) ||
+                   '';
+        if (!price) {
+          const candidates = Array.from(el.querySelectorAll('span, div')).map(n => getText(n)).filter(Boolean);
+          for (const t of candidates) {
+            const m = t.match(currencyRegex);
+            if (m) { price = normalize(m[0]); break; }
+          }
+        }
+        if (!price) {
+          return { success: false, reason: 'no price', price, index };
+        }
+
+        let condition = getText(el.querySelector('.s-card__subtitle .su-styled-text.secondary.default')) ||
+                       getText(el.querySelector('.s-card__subtitle-row .su-styled-text.secondary.default')) ||
+                       getText(el.querySelector('.su-styled-text.secondary.default')) ||
+                       '';
+        if (!condition) {
+          const m = (el.textContent || '').match(conditionRegex);
+          if (m) condition = normalize(m[1]);
+        }
+        if (!condition) condition = 'Unknown';
+        
+        // Normalize condition display
+        if (condition.toLowerCase().includes('pre-owned')) {
+          condition = 'Used';
+        } else if (condition.toLowerCase().includes('brand new')) {
+          condition = 'New';
+        }
+
+        return { 
+          success: true, 
+          item: { title, url, price, condition },
+          index
+        };
+      });
+    });
+
+    // Process results and take only what we need
+    for (let i = 0; i < Math.min(allResults.length, maxItems, itemsPerPage); i++) {
+      const result = allResults[i];
+      if (result.success) {
+        items.push(result.item);
+        console.log(`[extract-sold] SUCCESS: item ${i} extracted`);
+        
+        // If we've extracted 60 items and need more, break to move to page 2
+        if (items.length >= itemsPerPage && maxItems > itemsPerPage) {
+          console.log(`[extract-sold] Reached ${itemsPerPage} items on page 1, moving to page 2`);
+          break;
+        }
+      } else {
+        diagnostics.push({ index: i, ...result });
+        console.log(`[extract-sold] item ${i}: REJECTED - ${result.reason}`);
       }
     }
 
@@ -579,94 +583,96 @@ app.get('/search-sold', async (req, res) => {
         
         // Extract additional items from page 2 (up to remaining items needed)
         const remainingItems = Math.min(maxItems - items.length, itemsPerPage);
-        for (let i = 0; i < remainingItems; i++) {
-          try {
-            const result = await page.locator('#srp-river-results li[data-viewport]').nth(i).evaluate((el) => {
-              const KNOWN_CONDITIONS = [
-                'Brand New','New','New without box','Open Box','Certified Refurbished','Seller Refurbished','Refurbished',
-                'Used','Pre-Owned','Preowned','For parts or not working','For parts','Like New','Very Good','Good','Acceptable'
-              ];
-              const conditionRegex = new RegExp(`\\b(${KNOWN_CONDITIONS.map(c => c.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&')).join('|')})\\b`, 'i');
-              const currencyRegex = /(?:(?:US\s*)?\$)\s?\d{1,3}(?:,\d{3})*(?:\.\d{2})?/;
+        
+        // Use evaluateAll for page 2 as well
+        const page2Results = await page.locator('#srp-river-results li[data-viewport]').evaluateAll((elements) => {
+          const KNOWN_CONDITIONS = [
+            'Brand New','New','New without box','Open Box','Certified Refurbished','Seller Refurbished','Refurbished',
+            'Used','Pre-Owned','Preowned','For parts or not working','For parts','Like New','Very Good','Good','Acceptable'
+          ];
+          const conditionRegex = new RegExp(`\\b(${KNOWN_CONDITIONS.map(c => c.replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&')).join('|')})\\b`, 'i');
+          const currencyRegex = /(?:(?:US\s*)?\$)\s?\d{1,3}(?:,\d{3})*(?:\.\d{2})?/;
 
-              const normalize = (s) => (s || '').replace(/[\u00A0\u200B\u200C\u200D]/g, ' ').replace(/\s+/g, ' ').trim();
-              const getText = (el) => normalize(el && el.textContent ? el.textContent : '');
+          const normalize = (s) => (s || '').replace(/[\u00A0\u200B\u200C\u200D]/g, ' ').replace(/\s+/g, ' ').trim();
+          const getText = (el) => normalize(el && el.textContent ? el.textContent : '');
 
-              const linkEl = el.querySelector('a[href*="/itm/"]') || el.querySelector('a');
-              let url = linkEl?.getAttribute('href') || null;
-              if (!url) return { success: false, reason: 'no url' };
-              if (!/^https?:\/\//i.test(url)) {
-                url = 'https://www.ebay.com' + (url.startsWith('/') ? url : '/' + url);
-              }
-              if (!/\/itm\//.test(url)) {
-                return { success: false, reason: 'url does not contain /itm/', url };
-              }
-
-              // Use the correct selectors from the real listing structure
-              const titleEl = el.querySelector('.s-card__title .su-styled-text.primary.default') || 
-                             el.querySelector('.s-card__title span.su-styled-text.primary.default') ||
-                             el.querySelector('.s-card__title .su-styled-text.primary') ||
-                             el.querySelector('.s-card__title span');
-              let title = getText(titleEl);
-              
-              title = normalize(title);
-              // Filter out promotional and non-listing content
-              if (!title || 
-                  /shop on ebay/i.test(title) || 
-                  /find similar items/i.test(title) ||
-                  /see all the items/i.test(title) ||
-                  /results matching fewer words/i.test(title) ||
-                  title.length < 10) {
-                return { success: false, reason: 'invalid title (promotional/filtered)', title };
-              }
-
-              let price = getText(el.querySelector('.s-card__price.su-styled-text.primary.bold.large-1')) ||
-                         getText(el.querySelector('.s-card__attribute-row .su-styled-text.primary.bold.large-1')) ||
-                         getText(el.querySelector('.su-styled-text.primary.bold.large-1.s-card__price')) ||
-                         '';
-              if (!price) {
-                const candidates = Array.from(el.querySelectorAll('span, div')).map(n => getText(n)).filter(Boolean);
-                for (const t of candidates) {
-                  const m = t.match(currencyRegex);
-                  if (m) { price = normalize(m[0]); break; }
-                }
-              }
-              if (!price) {
-                return { success: false, reason: 'no price', price };
-              }
-
-              let condition = getText(el.querySelector('.s-card__subtitle .su-styled-text.secondary.default')) ||
-                             getText(el.querySelector('.s-card__subtitle-row .su-styled-text.secondary.default')) ||
-                             getText(el.querySelector('.su-styled-text.secondary.default')) ||
-                             '';
-              if (!condition) {
-                const m = (el.textContent || '').match(conditionRegex);
-                if (m) condition = normalize(m[1]);
-              }
-              if (!condition) condition = 'Unknown';
-              
-              // Normalize condition display
-              if (condition.toLowerCase().includes('pre-owned')) {
-                condition = 'Used';
-              } else if (condition.toLowerCase().includes('brand new')) {
-                condition = 'New';
-              }
-
-              return { 
-                success: true, 
-                item: { title, url, price, condition }
-              };
-            });
-
-            if (result.success) {
-              items.push(result.item);
-              console.log(`[extract-sold] SUCCESS: page 2 item ${i} extracted`);
-            } else {
-              console.log(`[extract-sold] page 2 item ${i}: REJECTED - ${result.reason}`);
+          return elements.map((el, index) => {
+            const linkEl = el.querySelector('a[href*="/itm/"]') || el.querySelector('a');
+            let url = linkEl?.getAttribute('href') || null;
+            if (!url) return { success: false, reason: 'no url', index };
+            if (!/^https?:\/\//i.test(url)) {
+              url = 'https://www.ebay.com' + (url.startsWith('/') ? url : '/' + url);
             }
-          } catch (err) {
-            console.log(`[extract-sold] page 2 item ${i}: ERROR - ${err.message}`);
-            break;
+            if (!/\/itm\//.test(url)) {
+              return { success: false, reason: 'url does not contain /itm/', url, index };
+            }
+
+            // Use the correct selectors from the real listing structure
+            const titleEl = el.querySelector('.s-card__title .su-styled-text.primary.default') || 
+                           el.querySelector('.s-card__title span.su-styled-text.primary.default') ||
+                           el.querySelector('.s-card__title .su-styled-text.primary') ||
+                           el.querySelector('.s-card__title span');
+            let title = getText(titleEl);
+            
+            title = normalize(title);
+            // Filter out promotional and non-listing content
+            if (!title || 
+                /shop on ebay/i.test(title) || 
+                /find similar items/i.test(title) ||
+                /see all the items/i.test(title) ||
+                /results matching fewer words/i.test(title) ||
+                title.length < 10) {
+              return { success: false, reason: 'invalid title (promotional/filtered)', title, index };
+            }
+
+            let price = getText(el.querySelector('.s-card__price.su-styled-text.primary.bold.large-1')) ||
+                       getText(el.querySelector('.s-card__attribute-row .su-styled-text.primary.bold.large-1')) ||
+                       getText(el.querySelector('.su-styled-text.primary.bold.large-1.s-card__price')) ||
+                       '';
+            if (!price) {
+              const candidates = Array.from(el.querySelectorAll('span, div')).map(n => getText(n)).filter(Boolean);
+              for (const t of candidates) {
+                const m = t.match(currencyRegex);
+                if (m) { price = normalize(m[0]); break; }
+              }
+            }
+            if (!price) {
+              return { success: false, reason: 'no price', price, index };
+            }
+
+            let condition = getText(el.querySelector('.s-card__subtitle .su-styled-text.secondary.default')) ||
+                           getText(el.querySelector('.s-card__subtitle-row .su-styled-text.secondary.default')) ||
+                           getText(el.querySelector('.su-styled-text.secondary.default')) ||
+                           '';
+            if (!condition) {
+              const m = (el.textContent || '').match(conditionRegex);
+              if (m) condition = normalize(m[1]);
+            }
+            if (!condition) condition = 'Unknown';
+            
+            // Normalize condition display
+            if (condition.toLowerCase().includes('pre-owned')) {
+              condition = 'Used';
+            } else if (condition.toLowerCase().includes('brand new')) {
+              condition = 'New';
+            }
+
+            return { 
+              success: true, 
+              item: { title, url, price, condition },
+              index
+            };
+          });
+        });
+
+        // Process page 2 results
+        for (let i = 0; i < Math.min(page2Results.length, remainingItems); i++) {
+          const result = page2Results[i];
+          if (result.success) {
+            items.push(result.item);
+            console.log(`[extract-sold] SUCCESS: page 2 item ${i} extracted`);
+          } else {
+            console.log(`[extract-sold] page 2 item ${i}: REJECTED - ${result.reason}`);
           }
         }
         console.log(`[extract-sold] Page 2 complete: extracted ${items.length} total items`);
