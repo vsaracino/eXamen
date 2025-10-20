@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>eBay Search App</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="search-container">
+    <h1>eXamen</h1>
+    <form id="search-form">
+      <input id="q" name="q" placeholder="Search keyword" required />
+      <button type="submit">GO</button>
+    </form>
+    <div id="status"></div>
+    <div id="summary"></div>
+  </div>
+  
+  <div class="results-container" id="results-wrapper" style="display: none;">
+    <ul id="results" class="results"></ul>
+    <button id="expand-btn" style="display:none">Show more</button>
+  </div>
+  <script src="/main.js"></script>
+  
+</body>
+</html>
+
+
