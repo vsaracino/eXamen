@@ -368,13 +368,26 @@ app.get('/search', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch results' });
   } finally {
     if (browser) {
-      // Close all contexts first (which contain pages)
-      const contexts = browser.contexts();
-      await Promise.all(contexts.map(context => context.close().catch(() => {})));
-      await browser.close().catch(() => {});
-      // Small delay to ensure cleanup
-      await new Promise(resolve => setTimeout(resolve, 100));
-      console.log('[search] browser closed');
+      try {
+        // Close all contexts first (which contain pages)
+        const contexts = browser.contexts();
+        await Promise.all(contexts.map(context => context.close().catch(() => {})));
+        
+        // Force close the browser
+        await browser.close().catch(() => {});
+        
+        // Longer delay to ensure complete cleanup
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Force garbage collection if available
+        if (global.gc) {
+          global.gc();
+        }
+        
+        console.log('[search] browser closed');
+      } catch (error) {
+        console.log('[search] cleanup error:', error.message);
+      }
     }
   }
 });
@@ -680,13 +693,26 @@ app.get('/search-sold', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch results' });
   } finally {
     if (browser) {
-      // Close all contexts first (which contain pages)
-      const contexts = browser.contexts();
-      await Promise.all(contexts.map(context => context.close().catch(() => {})));
-      await browser.close().catch(() => {});
-      // Small delay to ensure cleanup
-      await new Promise(resolve => setTimeout(resolve, 100));
-      console.log('[search-sold] browser closed');
+      try {
+        // Close all contexts first (which contain pages)
+        const contexts = browser.contexts();
+        await Promise.all(contexts.map(context => context.close().catch(() => {})));
+        
+        // Force close the browser
+        await browser.close().catch(() => {});
+        
+        // Longer delay to ensure complete cleanup
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Force garbage collection if available
+        if (global.gc) {
+          global.gc();
+        }
+        
+        console.log('[search-sold] browser closed');
+      } catch (error) {
+        console.log('[search-sold] cleanup error:', error.message);
+      }
     }
   }
 });
