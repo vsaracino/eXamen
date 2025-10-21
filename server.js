@@ -40,7 +40,7 @@ app.get('/search', async (req, res) => {
     if (browserlessUrl || browserDomain) {
       // Production: Use Browserless service
       // Use Browserless with connectOverCDP as per documentation
-      const token = process.env.BROWSERLESS_TOKEN;
+      const token = process.env.BROWSER_TOKEN;
       const baseUrl = browserlessUrl || browserDomain;
       const browserlessEndpoint = token ? `wss://${baseUrl}?token=${token}` : `wss://${baseUrl}`;
       console.log(`[search] connecting to browserless at ${browserlessEndpoint}`);
@@ -416,7 +416,7 @@ app.get('/search-sold', async (req, res) => {
     if (browserlessUrl || browserDomain) {
       // Production: Use Browserless service
       // Use Browserless with connectOverCDP as per documentation
-      const token = process.env.BROWSERLESS_TOKEN;
+      const token = process.env.BROWSER_TOKEN;
       const baseUrl = browserlessUrl || browserDomain;
       const browserlessEndpoint = token ? `wss://${baseUrl}?token=${token}` : `wss://${baseUrl}`;
       console.log(`[search] connecting to browserless at ${browserlessEndpoint}`);
