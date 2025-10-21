@@ -30,13 +30,14 @@ app.get('/search', async (req, res) => {
   try {
     console.log(`[search] start q="${keyword}" → ${searchUrl}`);
     // Connect to Browserless service or fallback to direct launch for local development
-    const browserlessUrl = process.env.BROWSERLESS_URL || process.env.RAILWAY_BROWSERLESS_URL;
+    const browserDomain = process.env.BROWSER_DOMAIN;
     
-    if (browserlessUrl) {
+    if (browserDomain) {
       // Production: Use Browserless service
-      console.log(`[search] connecting to browserless at ${browserlessUrl}`);
+      const wsUrl = `wss://${browserDomain}`;
+      console.log(`[search] connecting to browserless at ${wsUrl}`);
       try {
-        browser = await chromium.connect(browserlessUrl);
+        browser = await chromium.connect(wsUrl);
         console.log(`[search] connected to browserless successfully`);
       } catch (error) {
         console.error(`[search] failed to connect to browserless:`, error.message);
@@ -397,13 +398,14 @@ app.get('/search-sold', async (req, res) => {
   let browser;
   try {
     // Connect to Browserless service or fallback to direct launch for local development
-    const browserlessUrl = process.env.BROWSERLESS_URL || process.env.RAILWAY_BROWSERLESS_URL;
+    const browserDomain = process.env.BROWSER_DOMAIN;
     
-    if (browserlessUrl) {
+    if (browserDomain) {
       // Production: Use Browserless service
-      console.log(`[search] connecting to browserless at ${browserlessUrl}`);
+      const wsUrl = `wss://${browserDomain}`;
+      console.log(`[search] connecting to browserless at ${wsUrl}`);
       try {
-        browser = await chromium.connect(browserlessUrl);
+        browser = await chromium.connect(wsUrl);
         console.log(`[search] connected to browserless successfully`);
       } catch (error) {
         console.error(`[search] failed to connect to browserless:`, error.message);
