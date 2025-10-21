@@ -3,7 +3,8 @@ FROM node:18-alpine
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+# Install dependencies but skip Playwright browser installation
+RUN npm install --ignore-scripts
 
 COPY . .
 

@@ -29,16 +29,35 @@ app.get('/search', async (req, res) => {
   let browser;
   try {
     console.log(`[search] start q="${keyword}" → ${searchUrl}`);
-    // Connect to Browserless service instead of launching browser directly
-    const browserlessUrl = process.env.BROWSERLESS_URL || 'ws://localhost:3000';
-    console.log(`[search] connecting to browserless at ${browserlessUrl}`);
+    // Connect to Browserless service or fallback to direct launch for local development
+    const browserlessUrl = process.env.BROWSERLESS_URL;
     
-    try {
-      browser = await chromium.connect(browserlessUrl);
-      console.log(`[search] connected to browserless successfully`);
-    } catch (error) {
-      console.error(`[search] failed to connect to browserless:`, error.message);
-      throw new Error(`Browserless connection failed: ${error.message}`);
+    if (browserlessUrl) {
+      // Production: Use Browserless service
+      console.log(`[search] connecting to browserless at ${browserlessUrl}`);
+      try {
+        browser = await chromium.connect(browserlessUrl);
+        console.log(`[search] connected to browserless successfully`);
+      } catch (error) {
+        console.error(`[search] failed to connect to browserless:`, error.message);
+        throw new Error(`Browserless connection failed: ${error.message}`);
+      }
+    } else {
+      // Local development: Launch browser directly
+      console.log(`[search] launching browser directly for local development`);
+      browser = await chromium.launch({ 
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--disable-extensions',
+          '--disable-plugins',
+          '--disable-images',
+          '--disable-web-security'
+        ]
+      });
     }
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
@@ -377,16 +396,35 @@ app.get('/search-sold', async (req, res) => {
 
   let browser;
   try {
-    // Connect to Browserless service instead of launching browser directly
-    const browserlessUrl = process.env.BROWSERLESS_URL || 'ws://localhost:3000';
-    console.log(`[search] connecting to browserless at ${browserlessUrl}`);
+    // Connect to Browserless service or fallback to direct launch for local development
+    const browserlessUrl = process.env.BROWSERLESS_URL;
     
-    try {
-      browser = await chromium.connect(browserlessUrl);
-      console.log(`[search] connected to browserless successfully`);
-    } catch (error) {
-      console.error(`[search] failed to connect to browserless:`, error.message);
-      throw new Error(`Browserless connection failed: ${error.message}`);
+    if (browserlessUrl) {
+      // Production: Use Browserless service
+      console.log(`[search] connecting to browserless at ${browserlessUrl}`);
+      try {
+        browser = await chromium.connect(browserlessUrl);
+        console.log(`[search] connected to browserless successfully`);
+      } catch (error) {
+        console.error(`[search] failed to connect to browserless:`, error.message);
+        throw new Error(`Browserless connection failed: ${error.message}`);
+      }
+    } else {
+      // Local development: Launch browser directly
+      console.log(`[search] launching browser directly for local development`);
+      browser = await chromium.launch({ 
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--disable-extensions',
+          '--disable-plugins',
+          '--disable-images',
+          '--disable-web-security'
+        ]
+      });
     }
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
