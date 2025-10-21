@@ -39,7 +39,7 @@ app.get('/search', async (req, res) => {
     if (browserlessUrl || browserDomain) {
       // Production: Use Browserless service
       // Use Browserless with connectOverCDP as per documentation
-      const browserlessEndpoint = browserlessUrl ? `ws://${browserlessUrl}` : `ws://${browserDomain}`;
+      const browserlessEndpoint = browserlessUrl ? `wss://${browserlessUrl}` : `wss://${browserDomain}`;
       console.log(`[search] connecting to browserless at ${browserlessEndpoint}`);
       try {
         browser = await chromium.connectOverCDP(browserlessEndpoint);
@@ -412,7 +412,7 @@ app.get('/search-sold', async (req, res) => {
     if (browserlessUrl || browserDomain) {
       // Production: Use Browserless service
       // Use Browserless with connectOverCDP as per documentation
-      const browserlessEndpoint = browserlessUrl ? `ws://${browserlessUrl}` : `ws://${browserDomain}`;
+      const browserlessEndpoint = browserlessUrl ? `wss://${browserlessUrl}` : `wss://${browserDomain}`;
       console.log(`[search] connecting to browserless at ${browserlessEndpoint}`);
       try {
         browser = await chromium.connectOverCDP(browserlessEndpoint);
