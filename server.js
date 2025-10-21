@@ -34,12 +34,15 @@ app.get('/search', async (req, res) => {
     const browserDomain = process.env.BROWSER_DOMAIN;
     console.log(`[search] RAILWAY_SERVICE_BROWSERLESS_URL: ${browserlessUrl}`);
     console.log(`[search] BROWSER_DOMAIN: ${browserDomain}`);
-    console.log(`[search] All env vars:`, Object.keys(process.env).filter(key => key.includes('BROWSER') || key.includes('browser')));
+    console.log(`[search] BROWSERLESS_TOKEN: ${process.env.BROWSERLESS_TOKEN}`);
+    console.log(`[search] All env vars:`, Object.keys(process.env).filter(key => key.includes('BROWSER') || key.includes('browser') || key.includes('TOKEN')));
     
     if (browserlessUrl || browserDomain) {
       // Production: Use Browserless service
       // Use Browserless with connectOverCDP as per documentation
-      const browserlessEndpoint = browserlessUrl ? `wss://${browserlessUrl}` : `wss://${browserDomain}`;
+      const token = process.env.BROWSERLESS_TOKEN;
+      const baseUrl = browserlessUrl || browserDomain;
+      const browserlessEndpoint = token ? `wss://${baseUrl}?token=${token}` : `wss://${baseUrl}`;
       console.log(`[search] connecting to browserless at ${browserlessEndpoint}`);
       try {
         browser = await chromium.connectOverCDP(browserlessEndpoint);
@@ -407,12 +410,15 @@ app.get('/search-sold', async (req, res) => {
     const browserDomain = process.env.BROWSER_DOMAIN;
     console.log(`[search] RAILWAY_SERVICE_BROWSERLESS_URL: ${browserlessUrl}`);
     console.log(`[search] BROWSER_DOMAIN: ${browserDomain}`);
-    console.log(`[search] All env vars:`, Object.keys(process.env).filter(key => key.includes('BROWSER') || key.includes('browser')));
+    console.log(`[search] BROWSERLESS_TOKEN: ${process.env.BROWSERLESS_TOKEN}`);
+    console.log(`[search] All env vars:`, Object.keys(process.env).filter(key => key.includes('BROWSER') || key.includes('browser') || key.includes('TOKEN')));
     
     if (browserlessUrl || browserDomain) {
       // Production: Use Browserless service
       // Use Browserless with connectOverCDP as per documentation
-      const browserlessEndpoint = browserlessUrl ? `wss://${browserlessUrl}` : `wss://${browserDomain}`;
+      const token = process.env.BROWSERLESS_TOKEN;
+      const baseUrl = browserlessUrl || browserDomain;
+      const browserlessEndpoint = token ? `wss://${baseUrl}?token=${token}` : `wss://${baseUrl}`;
       console.log(`[search] connecting to browserless at ${browserlessEndpoint}`);
       try {
         browser = await chromium.connectOverCDP(browserlessEndpoint);
