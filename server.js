@@ -38,7 +38,7 @@ app.get('/search', async (req, res) => {
     
     if (browserlessUrl || browserDomain) {
       // Production: Use Browserless service
-      const wsUrl = browserlessUrl || `wss://${browserDomain}`;
+      const wsUrl = browserlessUrl ? `wss://${browserlessUrl}` : `wss://${browserDomain}`;
       console.log(`[search] connecting to browserless at ${wsUrl}`);
       try {
         browser = await chromium.connect(wsUrl);
@@ -410,7 +410,7 @@ app.get('/search-sold', async (req, res) => {
     
     if (browserlessUrl || browserDomain) {
       // Production: Use Browserless service
-      const wsUrl = browserlessUrl || `wss://${browserDomain}`;
+      const wsUrl = browserlessUrl ? `wss://${browserlessUrl}` : `wss://${browserDomain}`;
       console.log(`[search] connecting to browserless at ${wsUrl}`);
       try {
         browser = await chromium.connect(wsUrl);
