@@ -113,8 +113,8 @@ app.get('/search', async (req, res) => {
     // Extract items from first page (up to 60 items)
     const items = [];
     const diagnostics = [];
-    const maxItems = Math.min(totalResults || 20, 20); // Cap at 20 items for testing
-    const itemsPerPage = 20; // Reduced for testing
+    const maxItems = Math.min(totalResults || 100, 100); // Cap at 100 items
+    const itemsPerPage = 60; // 60 items per page
     
     // Use evaluateAll to avoid stale locator issues
     const allResults = await page.locator('#srp-river-results li[data-viewport]').evaluateAll((elements) => {
@@ -215,8 +215,8 @@ app.get('/search', async (req, res) => {
       }
     }
 
-    // Skip page 2 for testing - only use first page
-    if (false && items.length < maxItems && totalResults > itemsPerPage) {
+    // Navigate to page 2 if we need more items
+    if (items.length < maxItems && totalResults > itemsPerPage) {
       console.log(`[extract] Attempting page 2 to get more items (current: ${items.length}, target: ${maxItems})`);
       
       try {
@@ -505,8 +505,8 @@ app.get('/search-sold', async (req, res) => {
     // Extract items from first page (up to 60 items)
     const items = [];
     const diagnostics = [];
-    const maxItems = Math.min(totalResults || 20, 20); // Cap at 20 items for testing
-    const itemsPerPage = 20; // Reduced for testing
+    const maxItems = Math.min(totalResults || 100, 100); // Cap at 100 items
+    const itemsPerPage = 60; // 60 items per page
     
     // Use evaluateAll to avoid stale locator issues
     const allResults = await page.locator('#srp-river-results li[data-viewport]').evaluateAll((elements) => {
@@ -607,8 +607,8 @@ app.get('/search-sold', async (req, res) => {
       }
     }
 
-    // Skip page 2 for testing - only use first page
-    if (false && items.length < maxItems && totalResults > itemsPerPage) {
+    // Navigate to page 2 if we need more items
+    if (items.length < maxItems && totalResults > itemsPerPage) {
       console.log(`[extract-sold] Attempting page 2 to get more items (current: ${items.length}, target: ${maxItems})`);
       
       try {
