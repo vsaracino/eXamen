@@ -132,6 +132,8 @@ button:hover { background: #45a049; }
   display: flex;
   align-items: center;
   gap: 6px;
+  justify-content: flex-end;
+  text-align: right;
 }
 
 .condition {
@@ -426,6 +428,8 @@ button:hover { background: #45a049; }
   
   .result-meta {
     font-size: 0.6rem !important;
+    justify-content: flex-end !important;
+    text-align: right !important;
   }
   
   /* Analytics cards - more readable but still compact */
