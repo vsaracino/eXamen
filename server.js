@@ -30,7 +30,7 @@ app.get('/search', async (req, res) => {
   try {
     console.log(`[search] start q="${keyword}" → ${searchUrl}`);
     // Connect to Browserless service or fallback to direct launch for local development
-    const browserlessUrl = process.env.BROWSERLESS_URL;
+    const browserlessUrl = process.env.BROWSERLESS_URL || process.env.RAILWAY_BROWSERLESS_URL;
     
     if (browserlessUrl) {
       // Production: Use Browserless service
@@ -397,7 +397,7 @@ app.get('/search-sold', async (req, res) => {
   let browser;
   try {
     // Connect to Browserless service or fallback to direct launch for local development
-    const browserlessUrl = process.env.BROWSERLESS_URL;
+    const browserlessUrl = process.env.BROWSERLESS_URL || process.env.RAILWAY_BROWSERLESS_URL;
     
     if (browserlessUrl) {
       // Production: Use Browserless service
