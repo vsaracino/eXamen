@@ -85,6 +85,17 @@ function renderResults() {
   resultsList.className = 'results-list';
   resultsList.style.display = 'none';
   
+  // Add eBay search link at the top
+  const ebayLinkLi = document.createElement('li');
+  ebayLinkLi.className = 'ebay-search-link';
+  const ebayLink = document.createElement('a');
+  ebayLink.href = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(window.lastSearchQuery || '')}`;
+  ebayLink.target = '_blank';
+  ebayLink.rel = 'noopener noreferrer';
+  ebayLink.textContent = 'View Active Listings on eBay';
+  ebayLinkLi.appendChild(ebayLink);
+  resultsList.appendChild(ebayLinkLi);
+
   // Populate the results list
   for (const item of currentResults) {
     const li = document.createElement('li');
@@ -252,6 +263,17 @@ function renderSoldResults() {
   resultsList.className = 'results-list';
   resultsList.style.display = 'none';
   
+  // Add eBay sold search link at the top
+  const ebayLinkLi = document.createElement('li');
+  ebayLinkLi.className = 'ebay-search-link';
+  const ebayLink = document.createElement('a');
+  ebayLink.href = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(window.lastSearchQuery || '')}&LH_Complete=1&LH_Sold=1`;
+  ebayLink.target = '_blank';
+  ebayLink.rel = 'noopener noreferrer';
+  ebayLink.textContent = 'View Sold Listings on eBay';
+  ebayLinkLi.appendChild(ebayLink);
+  resultsList.appendChild(ebayLinkLi);
+
   // Populate the results list
   for (const item of currentSoldResults) {
     const li = document.createElement('li');
@@ -351,6 +373,10 @@ form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const q = input.value.trim();
   if (!q) return;
+  
+  // Store the search query for eBay links
+  window.lastSearchQuery = q;
+  
   showingAll = false;
   showingSoldAll = false;
   currentResults = [];
