@@ -43,14 +43,21 @@ app.get('/search', async (req, res) => {
       const token = process.env.BROWSER_TOKEN;
       const baseUrl = browserlessUrl || browserDomain;
       const browserlessEndpoint = token ? `wss://${baseUrl}?token=${token}` : `wss://${baseUrl}`;
-      console.log(`[search] connecting to browserless at ${browserlessEndpoint}`);
-      try {
-        browser = await chromium.connectOverCDP(browserlessEndpoint);
-        console.log(`[search] connected to browserless successfully`);
-      } catch (error) {
-        console.error(`[search] failed to connect to browserless:`, error.message);
-        throw new Error(`Browserless connection failed: ${error.message}`);
-      }
+    console.log(`[search] connecting to browserless at ${browserlessEndpoint}`);
+    try {
+      browser = await chromium.connectOverCDP(browserlessEndpoint);
+      console.log(`[search] connected to browserless successfully`);
+    } catch (error) {
+      console.error(`[search] failed to connect to browserless:`, error.message);
+      throw new Error(`Browserless connection failed: ${error.message}`);
+    }
+    
+    // Add debugging for browser state
+    console.log(`[search] browser connected, creating context...`);
+    const context = await browser.newContext();
+    console.log(`[search] context created, creating page...`);
+    const page = await context.newPage();
+    console.log(`[search] page created, navigating to ${searchUrl}...`);
     } else {
       // Local development: Launch browser directly
       console.log(`[search] launching browser directly for local development`);
@@ -419,14 +426,21 @@ app.get('/search-sold', async (req, res) => {
       const token = process.env.BROWSER_TOKEN;
       const baseUrl = browserlessUrl || browserDomain;
       const browserlessEndpoint = token ? `wss://${baseUrl}?token=${token}` : `wss://${baseUrl}`;
-      console.log(`[search] connecting to browserless at ${browserlessEndpoint}`);
-      try {
-        browser = await chromium.connectOverCDP(browserlessEndpoint);
-        console.log(`[search] connected to browserless successfully`);
-      } catch (error) {
-        console.error(`[search] failed to connect to browserless:`, error.message);
-        throw new Error(`Browserless connection failed: ${error.message}`);
-      }
+    console.log(`[search] connecting to browserless at ${browserlessEndpoint}`);
+    try {
+      browser = await chromium.connectOverCDP(browserlessEndpoint);
+      console.log(`[search] connected to browserless successfully`);
+    } catch (error) {
+      console.error(`[search] failed to connect to browserless:`, error.message);
+      throw new Error(`Browserless connection failed: ${error.message}`);
+    }
+    
+    // Add debugging for browser state
+    console.log(`[search] browser connected, creating context...`);
+    const context = await browser.newContext();
+    console.log(`[search] context created, creating page...`);
+    const page = await context.newPage();
+    console.log(`[search] page created, navigating to ${searchUrl}...`);
     } else {
       // Local development: Launch browser directly
       console.log(`[search] launching browser directly for local development`);
