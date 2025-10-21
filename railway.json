@@ -9,5 +9,13 @@
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
+  },
+  "services": {
+    "browserless": {
+      "template": "railwayapp-templates/browserless",
+      "variables": {
+        "BROWSERLESS_URL": "http://browserless:3000"
+      }
+    }
   }
 }

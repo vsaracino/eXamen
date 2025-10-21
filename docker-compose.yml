@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  browserless:
+    image: browserless/chrome:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - TOKEN=your-token-here
+      - MAX_CONCURRENT=10
+      - MAX_QUEUE=100
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    command: ["-p", "3000", "--chrome-args", "--no-sandbox"]
+  
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - BROWSERLESS_URL=ws://browserless:3000
+    depends_on:
+      - browserless

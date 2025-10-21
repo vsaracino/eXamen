@@ -29,9 +29,17 @@ app.get('/search', async (req, res) => {
   let browser;
   try {
     console.log(`[search] start q="${keyword}" → ${searchUrl}`);
-    browser = await chromium.launch({ 
-      headless: true
-    });
+    // Connect to Browserless service instead of launching browser directly
+    const browserlessUrl = process.env.BROWSERLESS_URL || 'ws://localhost:3000';
+    console.log(`[search] connecting to browserless at ${browserlessUrl}`);
+    
+    try {
+      browser = await chromium.connect(browserlessUrl);
+      console.log(`[search] connected to browserless successfully`);
+    } catch (error) {
+      console.error(`[search] failed to connect to browserless:`, error.message);
+      throw new Error(`Browserless connection failed: ${error.message}`);
+    }
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
       viewport: { width: 1366, height: 900 },
@@ -369,9 +377,17 @@ app.get('/search-sold', async (req, res) => {
 
   let browser;
   try {
-    browser = await chromium.launch({ 
-      headless: true
-    });
+    // Connect to Browserless service instead of launching browser directly
+    const browserlessUrl = process.env.BROWSERLESS_URL || 'ws://localhost:3000';
+    console.log(`[search] connecting to browserless at ${browserlessUrl}`);
+    
+    try {
+      browser = await chromium.connect(browserlessUrl);
+      console.log(`[search] connected to browserless successfully`);
+    } catch (error) {
+      console.error(`[search] failed to connect to browserless:`, error.message);
+      throw new Error(`Browserless connection failed: ${error.message}`);
+    }
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
       viewport: { width: 1366, height: 900 },
