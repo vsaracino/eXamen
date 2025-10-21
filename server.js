@@ -31,6 +31,8 @@ app.get('/search', async (req, res) => {
     console.log(`[search] start q="${keyword}" → ${searchUrl}`);
     // Connect to Browserless service or fallback to direct launch for local development
     const browserDomain = process.env.BROWSER_DOMAIN;
+    console.log(`[search] BROWSER_DOMAIN: ${browserDomain}`);
+    console.log(`[search] All env vars:`, Object.keys(process.env).filter(key => key.includes('BROWSER') || key.includes('browser')));
     
     if (browserDomain) {
       // Production: Use Browserless service
@@ -399,6 +401,8 @@ app.get('/search-sold', async (req, res) => {
   try {
     // Connect to Browserless service or fallback to direct launch for local development
     const browserDomain = process.env.BROWSER_DOMAIN;
+    console.log(`[search] BROWSER_DOMAIN: ${browserDomain}`);
+    console.log(`[search] All env vars:`, Object.keys(process.env).filter(key => key.includes('BROWSER') || key.includes('browser')));
     
     if (browserDomain) {
       // Production: Use Browserless service
