@@ -39,7 +39,7 @@ body {
 
 /* Make STR panel much narrower on all screen sizes */
 #str-wrapper {
-  max-width: 300px;
+  max-width: 33.33vw;
   margin: 0 auto;
 }
 
