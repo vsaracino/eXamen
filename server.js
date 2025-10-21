@@ -10,10 +10,10 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Rate limiting: 5 searches per minute per IP
+// Rate limiting: 30 searches per minute per IP
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 5, // 5 requests per minute
+  max: 30, // 30 requests per minute
   message: 'Rate limit exceeded. Please wait a moment before searching again.',
   standardHeaders: true,
   legacyHeaders: false,
