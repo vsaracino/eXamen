@@ -512,7 +512,7 @@ button:hover { background: #45a049; }
 }
 
 .ebay-search-link a {
-  color: #888 !important;
+  color: #5a8cc7 !important;
   text-decoration: none !important;
   font-weight: 400 !important;
   font-size: 0.8rem !important;
@@ -523,7 +523,7 @@ button:hover { background: #45a049; }
 }
 
 .ebay-search-link a:hover {
-  color: #aaa !important;
+  color: #7ba3d4 !important;
   background: #2a2a2a !important;
   text-decoration: none !important;
 }
