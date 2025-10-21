@@ -38,10 +38,11 @@ app.get('/search', async (req, res) => {
     
     if (browserlessUrl || browserDomain) {
       // Production: Use Browserless service
-      const wsUrl = browserlessUrl ? `wss://${browserlessUrl}` : `wss://${browserDomain}`;
-      console.log(`[search] connecting to browserless at ${wsUrl}`);
+      // Use Browserless with connectOverCDP as per documentation
+      const browserlessEndpoint = browserlessUrl ? `ws://${browserlessUrl}` : `ws://${browserDomain}`;
+      console.log(`[search] connecting to browserless at ${browserlessEndpoint}`);
       try {
-        browser = await chromium.connect(wsUrl);
+        browser = await chromium.connectOverCDP(browserlessEndpoint);
         console.log(`[search] connected to browserless successfully`);
       } catch (error) {
         console.error(`[search] failed to connect to browserless:`, error.message);
@@ -410,10 +411,11 @@ app.get('/search-sold', async (req, res) => {
     
     if (browserlessUrl || browserDomain) {
       // Production: Use Browserless service
-      const wsUrl = browserlessUrl ? `wss://${browserlessUrl}` : `wss://${browserDomain}`;
-      console.log(`[search] connecting to browserless at ${wsUrl}`);
+      // Use Browserless with connectOverCDP as per documentation
+      const browserlessEndpoint = browserlessUrl ? `ws://${browserlessUrl}` : `ws://${browserDomain}`;
+      console.log(`[search] connecting to browserless at ${browserlessEndpoint}`);
       try {
-        browser = await chromium.connect(wsUrl);
+        browser = await chromium.connectOverCDP(browserlessEndpoint);
         console.log(`[search] connected to browserless successfully`);
       } catch (error) {
         console.error(`[search] failed to connect to browserless:`, error.message);
