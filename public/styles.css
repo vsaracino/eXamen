@@ -37,12 +37,10 @@ body {
   padding: 8px;
 }
 
-/* Desktop: Make STR panel much narrower */
-@media (min-width: 769px) {
-  #str-wrapper {
-    max-width: 300px;
-    margin: 0 auto;
-  }
+/* Make STR panel much narrower on all screen sizes */
+#str-wrapper {
+  max-width: 300px;
+  margin: 0 auto;
 }
 
 h1 { 
