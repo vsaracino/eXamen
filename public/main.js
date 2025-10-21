@@ -147,7 +147,7 @@ function renderResults() {
         if (filterValue === 'all' || 
             (filterValue === 'new' && isNew) || 
             (filterValue === 'used' && isUsed)) {
-          item.style.display = 'block';
+          item.style.display = 'flex';
         } else {
           item.style.display = 'none';
         }
@@ -361,7 +361,7 @@ function renderSoldResults() {
         if (filterValue === 'all' || 
             (filterValue === 'new' && isNew) || 
             (filterValue === 'used' && isUsed)) {
-          item.style.display = 'block';
+          item.style.display = 'flex';
         } else {
           item.style.display = 'none';
         }
