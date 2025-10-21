@@ -27,11 +27,16 @@ function renderResults() {
   resultsWrapper.style.display = 'block';
   
   // Create analytics panels for New and Used items
-  const newItems = currentResults.filter(item => item.condition && item.condition.toLowerCase().includes('new'));
-  const usedItems = currentResults.filter(item => item.condition && (
-    item.condition.toLowerCase().includes('used') || 
-    item.condition.toLowerCase().includes('parts')
-  ));
+  const newItems = currentResults.filter(item => {
+    if (!item.condition) return false;
+    const condition = item.condition.toLowerCase();
+    return condition === 'new' || condition === 'new - open box';
+  });
+  const usedItems = currentResults.filter(item => {
+    if (!item.condition) return false;
+    const condition = item.condition.toLowerCase();
+    return condition !== 'new' && condition !== 'new - open box';
+  });
   
   // Create container for analytics panels
   const analyticsContainer = document.createElement('div');
@@ -189,11 +194,16 @@ function renderSoldResults() {
   soldResultsWrapper.style.display = 'block';
   
   // Create analytics panels for New and Used items
-  const newItems = currentSoldResults.filter(item => item.condition && item.condition.toLowerCase().includes('new'));
-  const usedItems = currentSoldResults.filter(item => item.condition && (
-    item.condition.toLowerCase().includes('used') || 
-    item.condition.toLowerCase().includes('parts')
-  ));
+  const newItems = currentSoldResults.filter(item => {
+    if (!item.condition) return false;
+    const condition = item.condition.toLowerCase();
+    return condition === 'new' || condition === 'new - open box';
+  });
+  const usedItems = currentSoldResults.filter(item => {
+    if (!item.condition) return false;
+    const condition = item.condition.toLowerCase();
+    return condition !== 'new' && condition !== 'new - open box';
+  });
   
   // Create container for analytics panels
   const analyticsContainer = document.createElement('div');
