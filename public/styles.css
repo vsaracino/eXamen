@@ -534,4 +534,49 @@ button:hover { background: #45a049; }
   text-decoration: none !important;
 }
 
+/* Filter Controls */
+.filter-controls {
+  background: transparent !important;
+  border: none !important;
+  margin-bottom: 8px !important;
+  padding: 4px 0 !important;
+  text-align: center !important;
+}
+
+.filter-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-options label {
+  color: #b0b0b0 !important;
+  font-size: 0.8rem !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.filter-options input[type="radio"] {
+  margin: 0 !important;
+  accent-color: #5a8cc7 !important;
+}
+
+.filter-options label:hover {
+  color: #d0d0d0 !important;
+}
+
+/* Mobile filter controls */
+@media (max-width: 480px) {
+  .filter-options {
+    gap: 8px;
+  }
+  
+  .filter-options label {
+    font-size: 0.7rem !important;
+  }
+}
+
 

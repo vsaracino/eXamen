@@ -96,10 +96,23 @@ function renderResults() {
   ebayLinkLi.appendChild(ebayLink);
   resultsList.appendChild(ebayLinkLi);
 
+  // Add filter radio buttons
+  const filterLi = document.createElement('li');
+  filterLi.className = 'filter-controls';
+  filterLi.innerHTML = `
+    <div class="filter-options">
+      <label><input type="radio" name="activeFilter" value="all" checked> All</label>
+      <label><input type="radio" name="activeFilter" value="new"> New</label>
+      <label><input type="radio" name="activeFilter" value="used"> Used</label>
+    </div>
+  `;
+  resultsList.appendChild(filterLi);
+
   // Populate the results list
   for (const item of currentResults) {
     const li = document.createElement('li');
     li.className = 'result-item';
+    li.dataset.condition = item.condition ? item.condition.toLowerCase() : '';
     
     const titleLink = document.createElement('a');
     titleLink.href = item.url;
@@ -118,6 +131,29 @@ function renderResults() {
     li.appendChild(meta);
     resultsList.appendChild(li);
   }
+
+  // Add filter event listeners
+  const filterInputs = resultsList.querySelectorAll('input[name="activeFilter"]');
+  filterInputs.forEach(input => {
+    input.addEventListener('change', () => {
+      const filterValue = input.value;
+      const resultItems = resultsList.querySelectorAll('.result-item');
+      
+      resultItems.forEach(item => {
+        const condition = item.dataset.condition;
+        const isNew = condition === 'new' || condition === 'new - open box';
+        const isUsed = !isNew;
+        
+        if (filterValue === 'all' || 
+            (filterValue === 'new' && isNew) || 
+            (filterValue === 'used' && isUsed)) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+  });
   
   container.appendChild(button);
   container.appendChild(resultsList);
@@ -274,10 +310,23 @@ function renderSoldResults() {
   ebayLinkLi.appendChild(ebayLink);
   resultsList.appendChild(ebayLinkLi);
 
+  // Add filter radio buttons
+  const filterLi = document.createElement('li');
+  filterLi.className = 'filter-controls';
+  filterLi.innerHTML = `
+    <div class="filter-options">
+      <label><input type="radio" name="soldFilter" value="all" checked> All</label>
+      <label><input type="radio" name="soldFilter" value="new"> New</label>
+      <label><input type="radio" name="soldFilter" value="used"> Used</label>
+    </div>
+  `;
+  resultsList.appendChild(filterLi);
+
   // Populate the results list
   for (const item of currentSoldResults) {
     const li = document.createElement('li');
     li.className = 'result-item';
+    li.dataset.condition = item.condition ? item.condition.toLowerCase() : '';
     
     const titleLink = document.createElement('a');
     titleLink.href = item.url;
@@ -296,6 +345,29 @@ function renderSoldResults() {
     li.appendChild(meta);
     resultsList.appendChild(li);
   }
+
+  // Add filter event listeners
+  const filterInputs = resultsList.querySelectorAll('input[name="soldFilter"]');
+  filterInputs.forEach(input => {
+    input.addEventListener('change', () => {
+      const filterValue = input.value;
+      const resultItems = resultsList.querySelectorAll('.result-item');
+      
+      resultItems.forEach(item => {
+        const condition = item.dataset.condition;
+        const isNew = condition === 'new' || condition === 'new - open box';
+        const isUsed = !isNew;
+        
+        if (filterValue === 'all' || 
+            (filterValue === 'new' && isNew) || 
+            (filterValue === 'used' && isUsed)) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+  });
   
   container.appendChild(button);
   container.appendChild(resultsList);
