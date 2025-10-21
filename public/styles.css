@@ -467,4 +467,39 @@ button:hover { background: #45a049; }
   }
 }
 
+/* Disclaimer Footer */
+.disclaimer {
+  max-width: var(--max);
+  margin: 32px auto 16px auto;
+  padding: 16px;
+  background: #1a1a1a;
+  border-radius: 8px;
+  border: 1px solid #333;
+}
+
+.disclaimer p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #b0b0b0;
+  text-align: center;
+}
+
+.disclaimer strong {
+  color: #e0e0e0;
+}
+
+/* Mobile disclaimer */
+@media (max-width: 480px) {
+  .disclaimer {
+    margin: 16px auto 8px auto;
+    padding: 12px;
+  }
+  
+  .disclaimer p {
+    font-size: 0.7rem;
+    line-height: 1.3;
+  }
+}
+
 
