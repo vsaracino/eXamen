@@ -34,6 +34,7 @@ app.get('/search', async (req, res) => {
     const browserDomain = process.env.BROWSER_DOMAIN;
     console.log(`[search] RAILWAY_SERVICE_BROWSERLESS_URL: ${browserlessUrl}`);
     console.log(`[search] BROWSER_DOMAIN: ${browserDomain}`);
+    console.log(`[search] All env vars:`, Object.keys(process.env).filter(key => key.includes('BROWSER') || key.includes('browser')));
     
     if (browserlessUrl || browserDomain) {
       // Production: Use Browserless service
@@ -405,6 +406,7 @@ app.get('/search-sold', async (req, res) => {
     const browserDomain = process.env.BROWSER_DOMAIN;
     console.log(`[search] RAILWAY_SERVICE_BROWSERLESS_URL: ${browserlessUrl}`);
     console.log(`[search] BROWSER_DOMAIN: ${browserDomain}`);
+    console.log(`[search] All env vars:`, Object.keys(process.env).filter(key => key.includes('BROWSER') || key.includes('browser')));
     
     if (browserlessUrl || browserDomain) {
       // Production: Use Browserless service
