@@ -384,9 +384,21 @@ app.get('/search', async (req, res) => {
     }
 
     console.log(`[search] extracted items=${items.length}`);
+    // Close browser connection to free up resources
+    if (browser) {
+      await browser.close().catch(() => {});
+      console.log('[search] browser closed');
+    }
+    
     res.json({ totalResults, results: items });
   } catch (err) {
     console.error('[search] error', err);
+    
+    // Close browser connection even on error
+    if (browser) {
+      await browser.close().catch(() => {});
+      console.log('[search] browser closed on error');
+    }
     
     if (err?.name === 'TimeoutError' || /waitForSelector|Navigation|net::ERR/i.test(String(err?.message || ''))) {
       res.json({ totalResults: null, results: [] });
@@ -711,9 +723,21 @@ app.get('/search-sold', async (req, res) => {
     }
 
     console.log(`[search-sold] extracted items=${items.length}`);
+    // Close browser connection to free up resources
+    if (browser) {
+      await browser.close().catch(() => {});
+      console.log('[search-sold] browser closed');
+    }
+    
     res.json({ totalResults, results: items });
   } catch (err) {
     console.error('[search-sold] error', err);
+    
+    // Close browser connection even on error
+    if (browser) {
+      await browser.close().catch(() => {});
+      console.log('[search-sold] browser closed on error');
+    }
     
     if (err?.name === 'TimeoutError' || /waitForSelector|Navigation|net::ERR/i.test(String(err?.message || ''))) {
       res.json({ totalResults: null, results: [] });
