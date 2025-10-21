@@ -122,7 +122,7 @@ app.get('/search', limiter, async (req, res) => {
     // Extract items from first page (up to 60 items)
     const items = [];
     const diagnostics = [];
-    const maxItems = Math.min(totalResults || 100, 100); // Cap at 100 items
+    const maxItems = Math.min(totalResults || 120, 120); // Cap at 120 items
     const itemsPerPage = 60; // 60 items per page
     
     // Use evaluateAll to avoid stale locator issues
@@ -514,7 +514,7 @@ app.get('/search-sold', limiter, async (req, res) => {
     // Extract items from first page (up to 60 items)
     const items = [];
     const diagnostics = [];
-    const maxItems = Math.min(totalResults || 100, 100); // Cap at 100 items
+    const maxItems = Math.min(totalResults || 120, 120); // Cap at 120 items
     const itemsPerPage = 60; // 60 items per page
     
     // Use evaluateAll to avoid stale locator issues
