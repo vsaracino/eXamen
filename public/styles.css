@@ -417,7 +417,7 @@ button:hover { background: #45a049; }
   }
   
   .result-item {
-    padding: 4px 0 !important;
+    padding: 4px 8px !important;
   }
   
   .result-title {
@@ -540,28 +540,29 @@ button:hover { background: #45a049; }
   border: none !important;
   margin-bottom: 8px !important;
   padding: 4px 0 !important;
-  text-align: center !important;
+  text-align: right !important;
 }
 
 .filter-options {
   display: flex;
-  justify-content: center;
-  gap: 12px;
+  justify-content: flex-end;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .filter-options label {
   color: #b0b0b0 !important;
-  font-size: 0.8rem !important;
+  font-size: 0.7rem !important;
   cursor: pointer !important;
   display: flex !important;
   align-items: center !important;
-  gap: 4px !important;
+  gap: 3px !important;
 }
 
 .filter-options input[type="radio"] {
   margin: 0 !important;
   accent-color: #5a8cc7 !important;
+  transform: scale(0.8);
 }
 
 .filter-options label:hover {
@@ -571,11 +572,11 @@ button:hover { background: #45a049; }
 /* Mobile filter controls */
 @media (max-width: 480px) {
   .filter-options {
-    gap: 8px;
+    gap: 6px;
   }
   
   .filter-options label {
-    font-size: 0.7rem !important;
+    font-size: 0.65rem !important;
   }
 }
 
