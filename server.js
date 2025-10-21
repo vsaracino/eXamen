@@ -9,9 +9,6 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Global browser instance to reuse across requests
-let globalBrowser = null;
-let browserInUse = false;
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -33,17 +30,7 @@ app.get('/search', async (req, res) => {
   try {
     console.log(`[search] start q="${keyword}" → ${searchUrl}`);
     browser = await chromium.launch({ 
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--disable-extensions',
-        '--disable-plugins',
-        '--disable-images',
-        '--disable-web-security'
-      ]
+      headless: true
     });
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
@@ -354,34 +341,9 @@ app.get('/search', async (req, res) => {
     }
 
     console.log(`[search] extracted items=${items.length}`);
-    
-    // Cleanup before sending response
-    if (browser) {
-      try {
-        const contexts = browser.contexts();
-        await Promise.all(contexts.map(context => context.close().catch(() => {})));
-        await browser.close();
-        console.log('[search] browser closed');
-      } catch (error) {
-        console.log('[search] cleanup error:', error.message);
-      }
-    }
-    
     res.json({ totalResults, results: items });
   } catch (err) {
     console.error('[search] error', err);
-    
-    // Cleanup on error too
-    if (browser) {
-      try {
-        const contexts = browser.contexts();
-        await Promise.all(contexts.map(context => context.close().catch(() => {})));
-        await browser.close();
-        console.log('[search] browser closed on error');
-      } catch (error) {
-        console.log('[search] cleanup error:', error.message);
-      }
-    }
     
     if (err?.name === 'TimeoutError' || /waitForSelector|Navigation|net::ERR/i.test(String(err?.message || ''))) {
       res.json({ totalResults: null, results: [] });
@@ -408,17 +370,7 @@ app.get('/search-sold', async (req, res) => {
   let browser;
   try {
     browser = await chromium.launch({ 
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--disable-extensions',
-        '--disable-plugins',
-        '--disable-images',
-        '--disable-web-security'
-      ]
+      headless: true
     });
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
@@ -673,34 +625,9 @@ app.get('/search-sold', async (req, res) => {
     }
 
     console.log(`[search-sold] extracted items=${items.length}`);
-    
-    // Cleanup before sending response
-    if (browser) {
-      try {
-        const contexts = browser.contexts();
-        await Promise.all(contexts.map(context => context.close().catch(() => {})));
-        await browser.close();
-        console.log('[search-sold] browser closed');
-      } catch (error) {
-        console.log('[search-sold] cleanup error:', error.message);
-      }
-    }
-
     res.json({ totalResults, results: items });
   } catch (err) {
     console.error('[search-sold] error', err);
-    
-    // Cleanup on error too
-    if (browser) {
-      try {
-        const contexts = browser.contexts();
-        await Promise.all(contexts.map(context => context.close().catch(() => {})));
-        await browser.close();
-        console.log('[search-sold] browser closed on error');
-      } catch (error) {
-        console.log('[search-sold] cleanup error:', error.message);
-      }
-    }
     
     if (err?.name === 'TimeoutError' || /waitForSelector|Navigation|net::ERR/i.test(String(err?.message || ''))) {
       res.json({ totalResults: null, results: [] });

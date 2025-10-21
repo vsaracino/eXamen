@@ -352,17 +352,16 @@ form.addEventListener('submit', async (e) => {
   statusEl.textContent = 'Analyzing listings... This may take up to 30 seconds';
   
         try {
-          // Search active listings first
-          const activeRes = await fetch(`/search?q=${encodeURIComponent(q)}`);
+          // Search both active and sold listings in parallel (Railway handles this)
+          const [activeRes, soldRes] = await Promise.all([
+            fetch(`/search?q=${encodeURIComponent(q)}`),
+            fetch(`/search-sold?q=${encodeURIComponent(q)}`)
+          ]);
+          
           if (!activeRes.ok) throw new Error('Active search failed');
-          const activeData = await activeRes.json();
-          
-          // Wait longer between searches to prevent Railway browser limits
-          await new Promise(resolve => setTimeout(resolve, 5000));
-          
-          // Then search sold listings
-          const soldRes = await fetch(`/search-sold?q=${encodeURIComponent(q)}`);
           if (!soldRes.ok) throw new Error('Sold search failed');
+          
+          const activeData = await activeRes.json();
           const soldData = await soldRes.json();
     
     currentResults = activeData.results || [];
