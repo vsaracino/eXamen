@@ -30,13 +30,14 @@ app.get('/search', async (req, res) => {
   try {
     console.log(`[search] start q="${keyword}" → ${searchUrl}`);
     // Connect to Browserless service or fallback to direct launch for local development
+    const browserlessUrl = process.env.RAILWAY_SERVICE_BROWSERLESS_URL;
     const browserDomain = process.env.BROWSER_DOMAIN;
+    console.log(`[search] RAILWAY_SERVICE_BROWSERLESS_URL: ${browserlessUrl}`);
     console.log(`[search] BROWSER_DOMAIN: ${browserDomain}`);
-    console.log(`[search] All env vars:`, Object.keys(process.env).filter(key => key.includes('BROWSER') || key.includes('browser')));
     
-    if (browserDomain) {
+    if (browserlessUrl || browserDomain) {
       // Production: Use Browserless service
-      const wsUrl = `wss://${browserDomain}`;
+      const wsUrl = browserlessUrl || `wss://${browserDomain}`;
       console.log(`[search] connecting to browserless at ${wsUrl}`);
       try {
         browser = await chromium.connect(wsUrl);
@@ -400,13 +401,14 @@ app.get('/search-sold', async (req, res) => {
   let browser;
   try {
     // Connect to Browserless service or fallback to direct launch for local development
+    const browserlessUrl = process.env.RAILWAY_SERVICE_BROWSERLESS_URL;
     const browserDomain = process.env.BROWSER_DOMAIN;
+    console.log(`[search] RAILWAY_SERVICE_BROWSERLESS_URL: ${browserlessUrl}`);
     console.log(`[search] BROWSER_DOMAIN: ${browserDomain}`);
-    console.log(`[search] All env vars:`, Object.keys(process.env).filter(key => key.includes('BROWSER') || key.includes('browser')));
     
-    if (browserDomain) {
+    if (browserlessUrl || browserDomain) {
       // Production: Use Browserless service
-      const wsUrl = `wss://${browserDomain}`;
+      const wsUrl = browserlessUrl || `wss://${browserDomain}`;
       console.log(`[search] connecting to browserless at ${wsUrl}`);
       try {
         browser = await chromium.connect(wsUrl);
