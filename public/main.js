@@ -472,6 +472,9 @@ form.addEventListener('submit', async (e) => {
   showingSoldAll = false;
   currentResults = [];
   currentSoldResults = [];
+  // Clear totalResults so panels hide until new search completes
+  window.lastTotalResults = null;
+  window.lastSoldTotalResults = null;
   renderResults();
   renderSoldResults();
   renderSTR();
