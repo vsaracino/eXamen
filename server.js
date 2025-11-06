@@ -121,24 +121,20 @@ app.get('/search', limiter, async (req, res) => {
 
     await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
     console.log('[search] navigated domcontentloaded');
-    // Reduced networkidle timeout since we're blocking most resources anyway
-    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
-    console.log('[search] networkidle (best-effort)');
-
-    // Reduced delay since we're blocking resources - page should be stable faster
-    await page.waitForTimeout(300);
+    // Skip networkidle wait - with resources blocked, domcontentloaded is sufficient
+    // Just wait briefly for any remaining JS to execute
+    await page.waitForTimeout(200);
 
     try {
       const consentBtn = await page.locator('button:has-text("Accept")').first();
       if (await consentBtn.count()) {
-        console.log('[search] consent button found, attempting click');
-        await consentBtn.click({ timeout: 2000 }).catch(() => {});
+        await consentBtn.click({ timeout: 1000 }).catch(() => {});
       }
     } catch {}
 
+    // Try to wait for selector, but don't block if it's not ready (we'll extract anyway)
     try {
-      // Reduced timeout since we're blocking resources - page loads faster
-      await page.waitForSelector('li[data-viewport]', { timeout: 10000 });
+      await page.waitForSelector('li[data-viewport]', { timeout: 5000 });
       console.log('[search] data-viewport items detected');
     } catch {
       console.log('[search] data-viewport timeout (continuing)');
@@ -280,8 +276,9 @@ app.get('/search', limiter, async (req, res) => {
           waitUntil: 'domcontentloaded', 
           timeout: 60000 
         });
-        await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
-        await page.waitForSelector('#srp-river-results li[data-viewport]', { timeout: 10000 }).catch(() => {});
+        // Skip networkidle wait for page 2 - faster with resources blocked
+        await page.waitForTimeout(200);
+        await page.waitForSelector('#srp-river-results li[data-viewport]', { timeout: 5000 }).catch(() => {});
         
         // Extract additional items from page 2 (up to remaining items needed)
         const remainingItems = Math.min(maxItems - items.length, itemsPerPage);
@@ -513,21 +510,20 @@ app.get('/search-sold', limiter, async (req, res) => {
 
     await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
     console.log('[search-sold] navigated domcontentloaded');
-    // Reduced networkidle timeout since we're blocking most resources anyway
-    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
-    console.log('[search-sold] networkidle (best-effort)');
+    // Skip networkidle wait - with resources blocked, domcontentloaded is sufficient
+    // Just wait briefly for any remaining JS to execute
+    await page.waitForTimeout(200);
 
     try {
       const consentBtn = await page.locator('button:has-text("Accept")').first();
       if (await consentBtn.count()) {
-        console.log('[search-sold] consent button found, attempting click');
-        await consentBtn.click({ timeout: 2000 }).catch(() => {});
+        await consentBtn.click({ timeout: 1000 }).catch(() => {});
       }
     } catch {}
 
+    // Try to wait for selector, but don't block if it's not ready (we'll extract anyway)
     try {
-      // Reduced timeout since we're blocking resources - page loads faster
-      await page.waitForSelector('li[data-viewport]', { timeout: 10000 });
+      await page.waitForSelector('li[data-viewport]', { timeout: 5000 });
       console.log('[search-sold] data-viewport items detected');
     } catch {
       console.log('[search-sold] data-viewport timeout (continuing)');
@@ -669,8 +665,9 @@ app.get('/search-sold', limiter, async (req, res) => {
           waitUntil: 'domcontentloaded', 
           timeout: 60000 
         });
-        await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
-        await page.waitForSelector('#srp-river-results li[data-viewport]', { timeout: 10000 }).catch(() => {});
+        // Skip networkidle wait for page 2 - faster with resources blocked
+        await page.waitForTimeout(200);
+        await page.waitForSelector('#srp-river-results li[data-viewport]', { timeout: 5000 }).catch(() => {});
         
         // Extract additional items from page 2 (up to remaining items needed)
         const remainingItems = Math.min(maxItems - items.length, itemsPerPage);
