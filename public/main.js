@@ -410,7 +410,18 @@ function renderSTR() {
   // Calculate STR: Sold / Active * 100
   const activeCount = window.lastTotalResults || 0;
   const soldCount = window.lastSoldTotalResults || 0;
-  const str = activeCount > 0 ? (soldCount / activeCount) * 100 : 0;
+  
+  // If there are sold listings but no active listings, that means 100% sellthrough (everything sold)
+  let str;
+  if (activeCount > 0) {
+    str = (soldCount / activeCount) * 100;
+  } else if (soldCount > 0) {
+    // No active listings but there are sold listings = 100% sellthrough
+    str = 100;
+  } else {
+    // No active and no sold = 0%
+    str = 0;
+  }
   
   // Determine color based on STR value
   let colorClass = '';
