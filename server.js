@@ -41,10 +41,6 @@ app.get('/search', limiter, async (req, res) => {
     // Connect to Browserless service or fallback to direct launch for local development
     const browserlessUrl = process.env.RAILWAY_SERVICE_BROWSERLESS_URL;
     const browserDomain = process.env.BROWSER_DOMAIN;
-    console.log(`[search] RAILWAY_SERVICE_BROWSERLESS_URL: ${browserlessUrl}`);
-    console.log(`[search] BROWSER_DOMAIN: ${browserDomain}`);
-    console.log(`[search] BROWSERLESS_TOKEN: ${process.env.BROWSERLESS_TOKEN}`);
-    console.log(`[search] All env vars:`, Object.keys(process.env).filter(key => key.includes('BROWSER') || key.includes('browser') || key.includes('TOKEN')));
     
     if (browserlessUrl || browserDomain) {
       // Production: Use Browserless service
@@ -262,16 +258,13 @@ app.get('/search', limiter, async (req, res) => {
       const result = allResults[i];
       if (result.success) {
         items.push(result.item);
-        console.log(`[extract] SUCCESS: item ${i} extracted`);
         
         // If we've extracted 60 items and need more, break to move to page 2
         if (items.length >= itemsPerPage && maxItems > itemsPerPage) {
-          console.log(`[extract] Reached ${itemsPerPage} items on page 1, moving to page 2`);
           break;
         }
       } else {
         diagnostics.push({ index: i, ...result });
-        console.log(`[extract] item ${i}: REJECTED - ${result.reason}`);
       }
     }
 
@@ -379,9 +372,6 @@ app.get('/search', limiter, async (req, res) => {
           const result = page2Results[i];
           if (result.success) {
             items.push(result.item);
-            console.log(`[extract] SUCCESS: page 2 item ${i} extracted`);
-          } else {
-            console.log(`[extract] page 2 item ${i}: REJECTED - ${result.reason}`);
           }
         }
         console.log(`[extract] Page 2 complete: extracted ${items.length} total items`);
@@ -390,58 +380,14 @@ app.get('/search', limiter, async (req, res) => {
       }
     }
 
-    // Log diagnostics for first few items
-    for (let i = 0; i < Math.min(diagnostics.length, 5); i++) {
-      const diag = diagnostics[i];
-      console.log(`[extract] item ${diag.index}: REJECTED - ${diag.reason}`, diag);
-    }
-    
-    // Also log ALL titles found to see what we're working with
-    const allTitles = await page.locator('li[data-viewport]').evaluateAll((nodes) => {
-      return nodes.map((el, index) => {
-        const linkEl = el.querySelector('a[href*="/itm/"]') || el.querySelector('a');
-        const titleEl = el.querySelector('h3, span, a');
-        const title = titleEl?.textContent?.trim() || linkEl?.textContent?.trim() || '';
-        return { index, title: title.substring(0, 100) }; // Limit length for logging
-      });
-    }).catch(() => []);
-    console.log('[extract] ALL titles found:', allTitles);
-    
-    // Also log successful items for debugging
-    if (items.length > 0) {
-      console.log(`[extract] SUCCESS: Found ${items.length} valid items`);
-      for (let i = 0; i < Math.min(items.length, 2); i++) {
-        console.log(`[extract] valid item ${i}:`, items[i]);
-      }
-    }
+    // Removed expensive diagnostic logging
 
     if (typeof totalResults === 'number' && totalResults >= 1 && items.length > totalResults) {
       items = items.slice(0, totalResults);
       console.log(`[search] capped items to totalResults=${totalResults}`);
     }
 
-    if (items.length) {
-      console.log('[search] sample item:', items[0]);
-    } else {
-      const liCount = await page.locator('li[data-viewport]').count().catch(() => 0);
-      console.log(`[search] diagnostics: li[data-viewport] count=${liCount}`);
-      try {
-        const diag = await page.locator('li[data-viewport]').evaluateAll((nodes) => {
-          const toBool = (v) => !!v;
-          const arr = [];
-          for (let i = 0; i < Math.min(nodes.length, 3); i++) {
-            const li = nodes[i];
-            const link = li.querySelector('a[href*="/itm/"]');
-            const title = li.querySelector('h3.s-item__title, a.s-item__link h3, span[role="heading"], .s-item__title') || link;
-            const priceSel = li.querySelector('.s-item__price, [data-testid="s-item-price"], span.s-item__price, span.su-styled-text.primary.bold.large-1.s-card__price');
-            const condSel = li.querySelector('.SECONDARY_INFO, .s-item__condition, .s-item__subtitle span, span.su-styled-text.secondary.default');
-            arr.push({ i, hasLink: toBool(link), hasTitle: toBool(title), hasPrice: toBool(priceSel), hasCondition: toBool(condSel) });
-          }
-          return arr;
-        });
-        console.log('[search] diagnostics sample:', JSON.stringify(diag));
-      } catch {}
-    }
+    // Removed sample item logging
 
     console.log(`[search] extracted items=${items.length}`);
     // Close browser connection to free up resources
@@ -487,10 +433,6 @@ app.get('/search-sold', limiter, async (req, res) => {
     // Connect to Browserless service or fallback to direct launch for local development
     const browserlessUrl = process.env.RAILWAY_SERVICE_BROWSERLESS_URL;
     const browserDomain = process.env.BROWSER_DOMAIN;
-    console.log(`[search] RAILWAY_SERVICE_BROWSERLESS_URL: ${browserlessUrl}`);
-    console.log(`[search] BROWSER_DOMAIN: ${browserDomain}`);
-    console.log(`[search] BROWSERLESS_TOKEN: ${process.env.BROWSERLESS_TOKEN}`);
-    console.log(`[search] All env vars:`, Object.keys(process.env).filter(key => key.includes('BROWSER') || key.includes('browser') || key.includes('TOKEN')));
     
     if (browserlessUrl || browserDomain) {
       // Production: Use Browserless service
@@ -705,16 +647,13 @@ app.get('/search-sold', limiter, async (req, res) => {
       const result = allResults[i];
       if (result.success) {
         items.push(result.item);
-        console.log(`[extract-sold] SUCCESS: item ${i} extracted`);
         
         // If we've extracted 60 items and need more, break to move to page 2
         if (items.length >= itemsPerPage && maxItems > itemsPerPage) {
-          console.log(`[extract-sold] Reached ${itemsPerPage} items on page 1, moving to page 2`);
           break;
         }
       } else {
         diagnostics.push({ index: i, ...result });
-        console.log(`[extract-sold] item ${i}: REJECTED - ${result.reason}`);
       }
     }
 
@@ -822,9 +761,6 @@ app.get('/search-sold', limiter, async (req, res) => {
           const result = page2Results[i];
           if (result.success) {
             items.push(result.item);
-            console.log(`[extract-sold] SUCCESS: page 2 item ${i} extracted`);
-          } else {
-            console.log(`[extract-sold] page 2 item ${i}: REJECTED - ${result.reason}`);
           }
         }
         console.log(`[extract-sold] Page 2 complete: extracted ${items.length} total items`);
