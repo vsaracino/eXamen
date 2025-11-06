@@ -86,10 +86,42 @@ app.get('/search', limiter, async (req, res) => {
     }
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
-      viewport: { width: 1366, height: 900 },
+      viewport: { width: 800, height: 600 },
       locale: 'en-US'
     });
     const page = await context.newPage();
+
+    // Block unnecessary resources to reduce memory usage
+    await page.route('**/*', (route) => {
+      const resourceType = route.request().resourceType();
+      const url = route.request().url();
+      
+      // Block CSS, fonts, images, and media
+      if (['stylesheet', 'font', 'image', 'media'].includes(resourceType)) {
+        route.abort();
+        return;
+      }
+      
+      // Block third-party scripts (keep only eBay scripts)
+      if (resourceType === 'script' && !url.includes('ebay.com') && !url.includes('ebaystatic.com')) {
+        route.abort();
+        return;
+      }
+      
+      // Block common ad/tracker domains
+      const blockedDomains = [
+        'doubleclick.net', 'google-analytics.com', 'googletagmanager.com',
+        'facebook.com', 'facebook.net', 'twitter.com', 'linkedin.com',
+        'adservice.google', 'adsystem.amazon', 'amazon-adsystem.com',
+        'scorecardresearch.com', 'quantserve.com', 'outbrain.com'
+      ];
+      if (blockedDomains.some(domain => url.includes(domain))) {
+        route.abort();
+        return;
+      }
+      
+      route.continue();
+    });
 
     await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
     console.log('[search] navigated domcontentloaded');
@@ -97,7 +129,7 @@ app.get('/search', limiter, async (req, res) => {
     console.log('[search] networkidle (best-effort)');
 
     // Add a small delay for page stability
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(500);
 
     try {
       const consentBtn = await page.locator('button:has-text("Accept")').first();
@@ -481,10 +513,42 @@ app.get('/search-sold', limiter, async (req, res) => {
     }
     const context = await browser.newContext({
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
-      viewport: { width: 1366, height: 900 },
+      viewport: { width: 800, height: 600 },
       locale: 'en-US'
     });
     const page = await context.newPage();
+
+    // Block unnecessary resources to reduce memory usage
+    await page.route('**/*', (route) => {
+      const resourceType = route.request().resourceType();
+      const url = route.request().url();
+      
+      // Block CSS, fonts, images, and media
+      if (['stylesheet', 'font', 'image', 'media'].includes(resourceType)) {
+        route.abort();
+        return;
+      }
+      
+      // Block third-party scripts (keep only eBay scripts)
+      if (resourceType === 'script' && !url.includes('ebay.com') && !url.includes('ebaystatic.com')) {
+        route.abort();
+        return;
+      }
+      
+      // Block common ad/tracker domains
+      const blockedDomains = [
+        'doubleclick.net', 'google-analytics.com', 'googletagmanager.com',
+        'facebook.com', 'facebook.net', 'twitter.com', 'linkedin.com',
+        'adservice.google', 'adsystem.amazon', 'amazon-adsystem.com',
+        'scorecardresearch.com', 'quantserve.com', 'outbrain.com'
+      ];
+      if (blockedDomains.some(domain => url.includes(domain))) {
+        route.abort();
+        return;
+      }
+      
+      route.continue();
+    });
 
     await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
     console.log('[search-sold] navigated domcontentloaded');
