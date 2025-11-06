@@ -18,7 +18,10 @@ let showingSoldAll = false;
 function renderResults() {
   resultsEl.innerHTML = '';
   
-  if (currentResults.length === 0) {
+  // Show panel if we have results OR if totalResults is explicitly 0 (meaning search completed with 0 results)
+  const shouldShow = currentResults.length > 0 || (typeof window.lastTotalResults === 'number' && window.lastTotalResults === 0);
+  
+  if (!shouldShow) {
     resultsWrapper.style.display = 'none';
     return;
   }
@@ -45,8 +48,9 @@ function renderResults() {
   // Add total results header (use the totalResults from the search response)
   const totalHeader = document.createElement('div');
   totalHeader.className = 'total-results-header';
+  const displayTotal = typeof window.lastTotalResults === 'number' ? window.lastTotalResults : currentResults.length;
   totalHeader.innerHTML = `
-    <h2>Active Results: ${window.lastTotalResults || currentResults.length}</h2>
+    <h2>Active Results: ${displayTotal}</h2>
   `;
   analyticsContainer.appendChild(totalHeader);
   
@@ -232,7 +236,10 @@ function hideResults() {
 function renderSoldResults() {
   soldResultsEl.innerHTML = '';
   
-  if (currentSoldResults.length === 0) {
+  // Show panel if we have results OR if totalResults is explicitly 0 (meaning search completed with 0 results)
+  const shouldShow = currentSoldResults.length > 0 || (typeof window.lastSoldTotalResults === 'number' && window.lastSoldTotalResults === 0);
+  
+  if (!shouldShow) {
     soldResultsWrapper.style.display = 'none';
     return;
   }
@@ -259,8 +266,9 @@ function renderSoldResults() {
   // Add total results header (use the totalResults from the search response)
   const totalHeader = document.createElement('div');
   totalHeader.className = 'total-results-header';
+  const displayTotal = typeof window.lastSoldTotalResults === 'number' ? window.lastSoldTotalResults : currentSoldResults.length;
   totalHeader.innerHTML = `
-    <h2>Sold Results: ${window.lastSoldTotalResults || currentSoldResults.length}</h2>
+    <h2>Sold Results: ${displayTotal}</h2>
   `;
   analyticsContainer.appendChild(totalHeader);
   

@@ -151,6 +151,23 @@ app.get('/search', limiter, async (req, res) => {
     const totalResults = total ? Number(total) : null;
     console.log(`[search] parsed totalResults=${totalResults ?? 'null'}`);
 
+    // Check for "No exact matches found" or "results matching fewer words"
+    // If detected, return 0 results (these are fallback results, not exact matches)
+    const noExactMatchesElement = await page.locator('h3.srp-save-null-search__heading').first().textContent().catch(() => null);
+    const noExactMatches = noExactMatchesElement && /no exact matches found/i.test(noExactMatchesElement);
+    const hasFewerWordsHeader = totalText && /results matching fewer words/i.test(totalText);
+    
+    if (noExactMatches || hasFewerWordsHeader) {
+      console.log('[search] "No exact matches found" or "results matching fewer words" detected - returning 0 results');
+      console.log('[search] Detection details:', { noExactMatches, hasFewerWordsHeader, noExactMatchesElement, totalText: totalText?.substring(0, 100) });
+      if (browser) {
+        await browser.close().catch(() => {});
+        console.log('[search] browser closed');
+      }
+      res.json({ totalResults: 0, results: [] });
+      return;
+    }
+
     // Extract items from first page (up to 60 items)
     const items = [];
     const diagnostics = [];
@@ -574,6 +591,23 @@ app.get('/search-sold', limiter, async (req, res) => {
     const total = totalText ? (totalText.match(/([\d,]+)/)?.[1]?.replace(/,/g, '') ?? null) : null;
     const totalResults = total ? Number(total) : null;
     console.log(`[search-sold] parsed totalResults=${totalResults ?? 'null'}`);
+
+    // Check for "No exact matches found" or "results matching fewer words"
+    // If detected, return 0 results (these are fallback results, not exact matches)
+    const noExactMatchesElement = await page.locator('h3.srp-save-null-search__heading').first().textContent().catch(() => null);
+    const noExactMatches = noExactMatchesElement && /no exact matches found/i.test(noExactMatchesElement);
+    const hasFewerWordsHeader = totalText && /results matching fewer words/i.test(totalText);
+    
+    if (noExactMatches || hasFewerWordsHeader) {
+      console.log('[search-sold] "No exact matches found" or "results matching fewer words" detected - returning 0 results');
+      console.log('[search-sold] Detection details:', { noExactMatches, hasFewerWordsHeader, noExactMatchesElement, totalText: totalText?.substring(0, 100) });
+      if (browser) {
+        await browser.close().catch(() => {});
+        console.log('[search-sold] browser closed');
+      }
+      res.json({ totalResults: 0, results: [] });
+      return;
+    }
 
     // Extract items from first page (up to 60 items)
     const items = [];

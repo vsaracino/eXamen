@@ -32,6 +32,28 @@ body {
   border: 1px solid #333;
 }
 
+/* Grid layout for Active and Sold results - side by side on desktop */
+.results-grid {
+  max-width: var(--max);
+  margin: 16px auto 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+/* Desktop: side by side layout */
+@media (min-width: 768px) {
+  .results-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  
+  .results-grid .results-container {
+    max-width: none;
+    margin: 0;
+  }
+}
+
 /* STR specific container styling */
 #str-wrapper {
   padding: 8px;
@@ -145,7 +167,8 @@ button:hover { background: #45a049; }
   font-weight: 600;
 }
 
-.results-container {
+/* Margin for standalone results containers (like STR wrapper) */
+.results-container:not(.results-grid .results-container) {
   margin-top: 16px;
 }
 
