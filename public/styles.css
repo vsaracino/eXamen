@@ -226,6 +226,8 @@ button:hover { background: #45a049; }
 
 .analytics-panels-container {
   margin-bottom: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .total-results-header {
@@ -353,17 +355,31 @@ button:hover { background: #45a049; }
   .search-container,
   .results-container {
     padding: 12px 16px 16px 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .results-grid {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .results-grid .results-container {
+    width: 100%;
+    box-sizing: border-box;
   }
   
   .panels-wrapper {
     flex-direction: column;
     gap: 12px;
+    width: 100%;
   }
   
   .analytics-panel {
     min-width: unset;
-    max-width: unset;
+    max-width: 100%;
     flex: none;
+    width: 100%;
   }
   
   .str-value {
@@ -398,6 +414,18 @@ button:hover { background: #45a049; }
   .search-container,
   .results-container {
     padding: 8px 12px 12px 12px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .results-grid {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .results-grid .results-container {
+    width: 100%;
+    box-sizing: border-box;
   }
   
   form {
