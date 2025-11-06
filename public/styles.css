@@ -382,8 +382,27 @@ button:hover { background: #45a049; }
     width: 100%;
   }
   
-  .str-value {
-    font-size: 2.5rem;
+  #str-wrapper .str-header h2 {
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+  }
+  
+  #str-wrapper .str-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 4px;
+  }
+  
+  #str-wrapper .str-value {
+    font-size: 1.5rem;
+    margin-bottom: 0;
+  }
+  
+  #str-wrapper .str-calculation {
+    font-size: 0.7rem;
   }
   
   .result-item {
@@ -433,8 +452,27 @@ button:hover { background: #45a049; }
     gap: 6px;
   }
   
-  .str-value {
-    font-size: 2rem;
+  #str-wrapper .str-header h2 {
+    font-size: 0.75rem;
+    margin-bottom: 2px;
+  }
+  
+  #str-wrapper .str-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 2px;
+  }
+  
+  #str-wrapper .str-value {
+    font-size: 1.2rem;
+    margin-bottom: 0;
+  }
+  
+  #str-wrapper .str-calculation {
+    font-size: 0.65rem;
   }
   
   /* Force mobile layout with maximum specificity */
